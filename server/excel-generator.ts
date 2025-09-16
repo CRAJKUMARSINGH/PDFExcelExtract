@@ -91,7 +91,7 @@ export class ExcelGenerator {
     return buffer;
   }
 
-  private calculateColumnWidths(data: string[][]): Array<{ width: number }> {
+  private calculateColumnWidths(data: string[][]): Array<{ wch: number }> {
     if (data.length === 0) return [];
     
     const maxCols = Math.max(...data.map(row => row.length));
@@ -107,7 +107,7 @@ export class ExcelGenerator {
       });
     });
     
-    return widths.map(width => ({ width }));
+    return widths.map(width => ({ wch: width }));
   }
 
   private styleHeaders(worksheet: XLSX.WorkSheet, headerCount: number): void {
@@ -159,11 +159,11 @@ export class ExcelGenerator {
     // Style the summary sheet
     const range = XLSX.utils.decode_range(summarySheet['!ref'] || 'A1');
     summarySheet['!cols'] = [
-      { width: 15 },
-      { width: 10 },
-      { width: 12 },
-      { width: 12 },
-      { width: 15 }
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 15 }
     ];
 
     // Style title
