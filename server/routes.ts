@@ -92,17 +92,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           size: req.file.size
         });
 
-        res.status(201).json({ 
-          success: true, 
-          data: { 
-            jobId: job.id, 
-            filename: job.filename,
-            status: job.status,
-            createdAt: job.createdAt
-          } 
-        });
+        res.status(201).json({ success: true, data: { jobId: job.id } });
       } catch (error) {
         logger.error('Error creating job', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Frontend alias: accepts field name 'pdf'
+  app.post(
+    '/api/jobs/upload',
+    upload.single('pdf'),
+    async (req, res, next) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const job = await storage.createProcessingJob({
+          filename: req.file.originalname,
+          status: 'pending'
+        } as any);
+
+        await storage.saveOriginalFile(job.id, {
+          buffer: req.file.buffer,
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size
+        });
+
+        res.status(201).json({ success: true, data: { jobId: job.id } });
+      } catch (error) {
+        logger.error('Error creating job (upload alias)', { error });
         next(error);
       }
     }
@@ -132,6 +154,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ success: true, message: 'Processing started' });
       } catch (error) {
         logger.error('Error starting processing', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Reprocess a job and restart processing
+  app.post(
+    '/api/jobs/:id/reprocess',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const job = await storage.getProcessingJob(req.params.id);
+        if (!job) {
+          return res.status(404).json({ success: false, message: 'Job not found' });
+        }
+
+        const tables = await storage.getExtractedTablesByJobId(req.params.id);
+        for (const t of tables) {
+          await storage.deleteExtractedTable(t.id);
+        }
+        await storage.deleteExcelFile(req.params.id);
+
+        await storage.updateProcessingJob(req.params.id, {
+          status: 'pending',
+          progress: 0,
+          errorMessage: null as any,
+        });
+
+        pdfProcessor.processJob(req.params.id).catch(err => {
+          logger.error('Background reprocessing failed', { error: err });
+        });
+
+        res.json({ success: true, message: 'Reprocessing started' });
+      } catch (error) {
+        logger.error('Error reprocessing job', { error });
         next(error);
       }
     }
@@ -246,6 +303,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Download a specific table as Excel
+  app.get(
+    '/api/jobs/:id/tables/:tableId/download',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const buffer = await excelGenerator.generateTableExcel(req.params.tableId);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Content-Disposition', `attachment; filename="table_${req.params.tableId}.xlsx"`);
+        res.send(buffer);
+      } catch (error) {
+        logger.error('Error downloading table excel', { error });
+        next(error);
+      }
+    }
+  );
+
   // List all jobs with pagination
   app.get(
     '/api/jobs',
@@ -261,25 +336,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pageSize: number;
           status?: 'pending' | 'processing' | 'completed' | 'failed';
         };
-        
-        const { jobs, total } = await storage.listProcessingJobs({
-          page,
-          pageSize,
-          status,
-        });
-        
-        res.json({
-          success: true,
-          data: jobs,
-          pagination: {
-            page,
-            pageSize,
-            total,
-            totalPages: Math.ceil(total / pageSize),
-          },
-        });
+
+        const all = await storage.getAllProcessingJobs({ status });
+        const total = all.length;
+        const start = (page - 1) * pageSize;
+        const jobs = all.slice(start, start + pageSize);
+
+        res.json(jobs);
       } catch (error) {
         logger.error('Error listing jobs', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Delete a job
+  app.delete(
+    '/api/jobs/:id',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const deleted = await storage.deleteProcessingJob(req.params.id);
+        if (!deleted) {
+          return res.status(404).json({ success: false, message: 'Job not found' });
+        }
+        res.json({ success: true });
+      } catch (error) {
+        logger.error('Error deleting job', { error });
         next(error);
       }
     }
