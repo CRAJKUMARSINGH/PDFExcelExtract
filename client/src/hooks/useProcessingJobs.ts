@@ -15,7 +15,11 @@ export function useProcessingJobs() {
   // Query to fetch all jobs
   const { data: jobs = [], isLoading, refetch } = useQuery<JobWithTables[]>({
     queryKey: ['/api/jobs'],
-    refetchInterval: currentJobId && currentJob?.status === 'processing' ? 2000 : false, // Poll only when processing
+    refetchInterval: (data) => {
+      if (!currentJobId || !data) return false;
+      const job = data.find(j => j.id === currentJobId);
+      return job?.status === 'processing' ? 2000 : false;
+    },
   });
 
   // Mutation to upload PDF files
@@ -59,8 +63,11 @@ export function useProcessingJobs() {
       const response = await apiRequest('POST', `/api/jobs/${jobId}/reprocess`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (_, jobId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      // Automatically start processing after retry
+      setCurrentJobId(jobId);
+      await startProcessingMutation.mutateAsync(jobId);
     },
   });
 
@@ -135,7 +142,9 @@ export function useProcessingJobs() {
       
       // Start processing the first uploaded file
       if (results.length > 0) {
-        await startProcessingMutation.mutateAsync(results[0].id);
+        const jobId = results[0].jobId;
+        setCurrentJobId(jobId);
+        await startProcessingMutation.mutateAsync(jobId);
       }
     } catch (error) {
       console.error('Failed to upload and process files:', error);
@@ -145,7 +154,7 @@ export function useProcessingJobs() {
   // Download Excel file for a specific table
   const downloadTableExcel = useCallback(async (jobId: string, tableId: string, filename: string) => {
     try {
-      const response = await fetch(`/api/jobs/${jobId}/tables/${tableId}/excel`);
+      const response = await fetch(`/api/jobs/${jobId}/tables/${tableId}/download`);
       if (!response.ok) throw new Error('Download failed');
       
       const blob = await response.blob();
@@ -165,7 +174,7 @@ export function useProcessingJobs() {
   // Download combined Excel file for all tables
   const downloadAllTablesExcel = useCallback(async (jobId: string, filename: string) => {
     try {
-      const response = await fetch(`/api/jobs/${jobId}/excel`);
+      const response = await fetch(`/api/jobs/${jobId}/download`);
       if (!response.ok) throw new Error('Download failed');
       
       const blob = await response.blob();
