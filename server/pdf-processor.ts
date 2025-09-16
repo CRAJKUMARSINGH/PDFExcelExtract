@@ -1,7 +1,7 @@
 import { createWorker, PSM } from 'tesseract.js';
 import { fromPath } from 'pdf2pic';
 import sharp from 'sharp';
-import pdfParse from 'pdf-parse';
+// pdf-parse was unused
 import { storage } from './storage';
 import type { OriginalFile } from './storage';
 import fs from 'fs/promises';
@@ -143,14 +143,15 @@ export class PDFProcessor {
       } catch {}
 
       // Use pdfjs-dist legacy build to extract text content in Node
-      const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-      const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false, useWorkerFetch: false, useSystemFonts: true, disableFontFace: true });
+      // Create a fresh copy to avoid detached ArrayBuffer issues in newer Node versions
+      const data = new Uint8Array(buffer);
+      const loadingTask = getDocument({ data } as any);
       const pdf = await loadingTask.promise;
       let fullText = '';
       const numPages = Math.min(pdf.numPages, 50);
       for (let p = 1; p <= numPages; p++) {
         const page = await pdf.getPage(p);
-        const textContent = await page.getTextContent({ disableCombineTextItems: false });
+        const textContent = await page.getTextContent() as any;
         const pageText = (textContent.items as any[]).map((i) => (i.str || '')).join(' ');
         fullText += `\n\n--- Page ${p} ---\n` + pageText + '\n';
       }
@@ -163,15 +164,16 @@ export class PDFProcessor {
 
   private async detectTablesByLayout(buffer: Buffer): Promise<TableDetectionResult[]> {
     try {
-      const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-      const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false });
+      // Create a fresh copy to avoid detached ArrayBuffer issues in newer Node versions
+      const data = new Uint8Array(buffer);
+      const loadingTask = getDocument({ data } as any);
       const pdf = await loadingTask.promise;
       const allTables: TableDetectionResult[] = [];
 
       let tableCounter = 0;
       for (let p = 1; p <= Math.min(pdf.numPages, 10); p++) {
         const page = await pdf.getPage(p);
-        const textContent = await page.getTextContent({ disableCombineTextItems: false });
+        const textContent = await page.getTextContent() as any;
         const items = (textContent.items as any[]).filter(i => i && typeof i.str === 'string' && i.str.trim().length > 0);
         if (items.length === 0) continue;
 
