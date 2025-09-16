@@ -4,6 +4,8 @@ import multer from "multer";
 import { z } from "zod";
 import { storage } from "./storage";
 import { insertProcessingJobSchema } from "@shared/schema";
+import { pdfProcessor } from "./pdf-processor";
+import { excelGenerator } from "./excel-generator";
 
 // Configure multer for PDF uploads
 const upload = multer({
@@ -79,8 +81,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errorMessage: null 
       });
 
-      // Start background processing (this will be implemented in the next task)
-      // For now, we'll return success and let the frontend poll for status
+      // Start background processing
+      pdfProcessor.processJob(id).catch(error => {
+        console.error(`Background processing failed for job ${id}:`, error);
+      });
+      
       res.json({ message: 'Processing started' });
     } catch (error) {
       console.error('Process start error:', error);
@@ -194,8 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let excelBuffer = await storage.getExcelFile(jobId, tableId);
       
       if (!excelBuffer) {
-        // Generate Excel file (will be implemented in next task)
-        return res.status(503).json({ error: 'Excel generation not yet implemented' });
+        // Generate Excel file on demand
+        excelBuffer = await excelGenerator.generateTableExcel(tableId);
       }
 
       const job = await storage.getProcessingJob(jobId);
@@ -228,8 +233,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let excelBuffer = await storage.getExcelFile(id);
       
       if (!excelBuffer) {
-        // Generate combined Excel file (will be implemented in next task)
-        return res.status(503).json({ error: 'Excel generation not yet implemented' });
+        // Generate combined Excel file on demand
+        excelBuffer = await excelGenerator.generateJobExcel(id);
       }
 
       const filename = `${jobWithTables.job.filename.replace('.pdf', '')}_extracted_tables.xlsx`;
