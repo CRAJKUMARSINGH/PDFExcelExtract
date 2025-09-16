@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FileUploadZone } from '@/components/FileUploadZone'
 import { ProcessingPipeline } from '@/components/ProcessingPipeline'
 import { ResultsDashboard } from '@/components/ResultsDashboard'
@@ -7,158 +7,54 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, Zap, Download, ArrowRight } from 'lucide-react'
-import type { ProcessingStatus, TablePreview as TablePreviewType } from '@shared/schema'
-
-// todo: remove mock functionality
-interface ProcessingJob {
-  id: string
-  filename: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  uploadedAt: Date
-  completedAt?: Date
-  progress: number
-  tables: TablePreviewType[]
-  errorMessage?: string
-}
+import { useProcessingJobs } from '@/hooks/useProcessingJobs'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('upload')
-  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus | null>(null)
-  const [jobs, setJobs] = useState<ProcessingJob[]>([])
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const {
+    jobs,
+    currentJob,
+    currentJobId,
+    setCurrentJobId,
+    processingStatus,
+    handleFilesUploaded,
+    retryJob,
+    deleteJob,
+    downloadTableExcel,
+    downloadAllTablesExcel,
+    isUploading,
+    isProcessing
+  } = useProcessingJobs()
 
-  // todo: remove mock functionality
-  const handleFilesUploaded = (files: File[]) => {
-    console.log('Files uploaded for processing:', files.map(f => f.name))
-    
-    files.forEach((file, index) => {
-      const jobId = `job-${Date.now()}-${index}`
-      const newJob: ProcessingJob = {
-        id: jobId,
-        filename: file.name,
-        status: 'pending',
-        uploadedAt: new Date(),
-        progress: 0,
-        tables: []
-      }
-      
-      setJobs(prev => [...prev, newJob])
-      setCurrentJobId(jobId)
-      
-      // Start processing simulation
-      setTimeout(() => {
-        startProcessingSimulation(jobId, file.name)
-      }, 1000)
-    })
-    
+  // Handle file upload with real API
+  const onFilesUploaded = async (files: File[]) => {
+    await handleFilesUploaded(files)
     setActiveTab('processing')
   }
 
-  // todo: remove mock functionality - simulate processing pipeline
-  const startProcessingSimulation = (jobId: string, filename: string) => {
-    const steps = [
-      { step: 'upload', progress: 25, message: 'File uploaded successfully', duration: 1000 },
-      { step: 'ocr', progress: 50, message: 'Extracting text from scanned pages...', duration: 3000 },
-      { step: 'table-detection', progress: 75, message: 'Detecting and analyzing table structures...', duration: 2500 },
-      { step: 'excel-generation', progress: 90, message: 'Generating Excel files...', duration: 1500 },
-      { step: 'complete', progress: 100, message: 'Processing completed successfully!', duration: 500 }
-    ]
-
-    let currentStep = 0
-    
-    const processNextStep = () => {
-      if (currentStep < steps.length) {
-        const step = steps[currentStep]
-        setProcessingStatus({
-          step: step.step as any,
-          progress: step.progress,
-          message: step.message
-        })
-        
-        // Update job status
-        setJobs(prev => prev.map(job => 
-          job.id === jobId 
-            ? { ...job, status: step.step === 'complete' ? 'completed' : 'processing', progress: step.progress }
-            : job
-        ))
-        
-        if (step.step === 'complete') {
-          // Add mock extracted tables
-          const mockTables: TablePreviewType[] = [
-            {
-              id: 'table-001',
-              headers: ['Month', 'Revenue', 'Expenses', 'Profit', 'Growth %'],
-              data: [
-                ['January', '$125,000', '$78,000', '$47,000', '8.5%'],
-                ['February', '$132,000', '$81,000', '$51,000', '12.3%'],
-                ['March', '$145,000', '$85,000', '$60,000', '18.7%'],
-                ['April', '$138,000', '$83,000', '$55,000', '15.2%'],
-                ['May', '$156,000', '$89,000', '$67,000', '22.1%'],
-                ['June', '$168,000', '$92,000', '$76,000', '28.4%']
-              ],
-              confidence: 94,
-              rowCount: 6,
-              colCount: 5
-            },
-            {
-              id: 'table-002',
-              headers: ['Department', 'Budget', 'Actual', 'Variance', 'Status'],
-              data: [
-                ['Marketing', '$50,000', '$48,500', '-$1,500', 'Under Budget'],
-                ['Sales', '$80,000', '$82,300', '+$2,300', 'Over Budget'],
-                ['R&D', '$120,000', '$115,800', '-$4,200', 'Under Budget'],
-                ['Operations', '$95,000', '$97,200', '+$2,200', 'Over Budget']
-              ],
-              confidence: 89,
-              rowCount: 4,
-              colCount: 5
-            }
-          ]
-          
-          setJobs(prev => prev.map(job => 
-            job.id === jobId 
-              ? { ...job, status: 'completed', completedAt: new Date(), tables: mockTables }
-              : job
-          ))
-          
-          setActiveTab('results')
-        }
-        
-        currentStep++
-        setTimeout(processNextStep, step.duration)
-      }
-    }
-    
-    processNextStep()
-  }
 
   const handleDownloadAll = (jobId: string) => {
-    console.log('Download all tables for job:', jobId)
-    // todo: implement actual download
+    const job = jobs.find(j => j.id === jobId)
+    if (job) {
+      downloadAllTablesExcel(jobId, job.filename)
+    }
   }
 
   const handleDownloadTable = (tableId: string, format: 'xlsx' | 'csv') => {
-    console.log(`Download ${format.toUpperCase()} for table:`, tableId)
-    // todo: implement actual download
+    if (format === 'xlsx' && currentJob) {
+      downloadTableExcel(currentJob.id, tableId, currentJob.filename)
+    }
+    // CSV format not implemented yet
   }
 
   const handleReprocess = (jobId: string) => {
-    console.log('Reprocess job:', jobId)
-    const job = jobs.find(j => j.id === jobId)
-    if (job) {
-      startProcessingSimulation(jobId, job.filename)
-      setCurrentJobId(jobId)
-      setActiveTab('processing')
-    }
+    retryJob(jobId)
+    setCurrentJobId(jobId)
+    setActiveTab('processing')
   }
 
   const handleDelete = (jobId: string) => {
-    console.log('Delete job:', jobId)
-    setJobs(prev => prev.filter(job => job.id !== jobId))
-    if (currentJobId === jobId) {
-      setCurrentJobId(null)
-      setProcessingStatus(null)
-    }
+    deleteJob(jobId)
   }
 
   return (
@@ -239,7 +135,7 @@ export default function Home() {
                 </div>
               </Card>
 
-              <FileUploadZone onFilesUploaded={handleFilesUploaded} />
+              <FileUploadZone onFilesUploaded={onFilesUploaded} />
             </div>
           </TabsContent>
 
@@ -268,7 +164,7 @@ export default function Home() {
 
           <TabsContent value="results" className="space-y-6">
             <ResultsDashboard
-              jobs={jobs}
+              jobs={jobs as any}
               onDownloadAll={handleDownloadAll}
               onDownloadTable={handleDownloadTable}
               onReprocess={handleReprocess}
