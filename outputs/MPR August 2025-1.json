@@ -1,0 +1,52 @@
+{
+  "job": {
+    "filename": "MPR August 2025-1.pdf",
+    "status": "completed",
+    "id": "11877b27-4efd-4da4-a71d-58f79a920e3a",
+    "uploadedAt": "2025-09-16T11:28:17.719Z",
+    "completedAt": "2025-09-16T11:28:17.731Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "11877b27-4efd-4da4-a71d-58f79a920e3a",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "--- Page 3 ---"
+        ],
+        [
+          "--- Page 4 ---"
+        ],
+        [
+          "--- Page 5 ---"
+        ],
+        [
+          "--- Page 6 ---"
+        ],
+        [
+          "--- Page 7 ---"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 80,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 140
+      },
+      "id": "9d4d08c8-56e1-478d-bdb8-c6ba1a3de716",
+      "extractedAt": "2025-09-16T11:28:17.731Z"
+    }
+  ]
+}

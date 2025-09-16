@@ -1,0 +1,55 @@
+{
+  "job": {
+    "filename": "rpwa1-3.pdf",
+    "status": "completed",
+    "id": "55075ce8-f217-4efb-bb9f-b1929eb0c215",
+    "uploadedAt": "2025-09-16T11:28:17.869Z",
+    "completedAt": "2025-09-16T11:28:17.902Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "55075ce8-f217-4efb-bb9f-b1929eb0c215",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "Government of Rajasthan  Public Works Department, Jaipur  PWD103: X.En.PWD. Electric Div.Udr. (12189)  Jun, 2022 CASH BOOK ( Ver 1.0 )  (Refered to in Rules 99, 100, 104, 117, 118, 128, 158 and 686)  Form RPWA 1  RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  1   Opening Balance   0.00  2   01-06-2022   TVNo: 11865   Mitul Enterprises (AgreeMentNo 30/2021- 22, Electric repair work in Ist,IIIrd & IV th Type Quarters at Udaipur)  11,960.00   4485: SD2, 2990: I-Tax, 2990: GSTIN Deduction, 1495: Labour-Welfare,  01-06-2022   Tvno: 11298   Mitul Enterprises , Paymanager Bill No: 39882020, Bill Type: Deposit Refund  29461.00   29,461   8443-00-108-00-00  3   01-06-2022   TVNo: 11866   Vikas Enterprises (AgreeMentNo 29/2021- 22, Supply of experienced wireman Electricians for day to day maintenance for MB hospital and its associates building Udaipur)  939.00   469: I-Tax, 470: GSTIN Deduction,  01-06-2022   Tvno: 11865   Mitul Enterprises (Wo.No.:534 , Wo. Date:01/09/2021, AgreeMentNo 30/2021- 22, Electric repair work in Ist,IIIrd & IV th Type Quarters at Udaipur) , Paymanager Bill No: 39859662, Bill Type: Work Order Payments (1 Running)  11,960   137535.00   1,49,495   2216-05-053-01-08-21-V-P  4   01-06-2022   TVNo: 11868   Som Electricals (AgreeMentNo 13/2020- 21, E/f in ADJ Court Kherwara Distt Udaipur)  44,303.00   24202: SD2, 4840: I-Tax, 4841: GSTIN Deduction, 2420: Labour-Welfare, 8000: MD5,  01-06-2022   Tvno: 11866   Vikas Enterprises (Wo.No.:531 , Wo. Date:01/09/2021, AgreeMentNo 29/2021- 22, Supply of experienced wireman Electricians for day to day maintenance for MB hospital and its associates building Udaipur) , Paymanager Bill No: 39859752, Bill Type: Work Order Payments (4 Running)  939   22512.00   23,451   8443-00-108-00-00  5   0.00   01-06-2022   Tvno: 11868   Som Electricals (Wo.No.:174 , Wo. Date:17/06/2020, AgreeMentNo 13/2020- 21, E/f in ADJ Court Kherwara Distt Udaipur) , Paymanager Bill No: 39882036, Bill Type: Work Order Payments (2 & Final)  44,303   197721.00   2,42,024   4059-80-051-03-03-17-V-P  6   03-06-2022   CrNo: 063386/57   Vikas Enterprises   380.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812350 GRN:62859440  Remittance to Treasury   380   0.00   380   8443-00-108-00-00  7   03-06-2022   CrNo: 063386/59   Vikas Enterprises   925.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812351 GRN:62859564  Remittance to Treasury   240   0.00   240   8443-00-108-00-00  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:02:34 PM) Page 1 of 4"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  8   03-06-2022   CrNo: 063386/60   Vikas Enterprises   750.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812352 GRN:62859687  Remittance to Treasury   925   0.00   925   8443-00-108-00-00  9   03-06-2022   CrNo: 063386/61   Vikas Enterprises   900.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812353 GRN:62859736  Remittance to Treasury   750   0.00   750   8443-00-108-00-00  10   03-06-2022   CrNo: 063386/62   Vikas Enterprises   820.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812354 GRN:62859924  Remittance to Treasury   900   0.00   900   8443-00-108-00-00  11   03-06-2022   CrNo: 063386/63   Vikas Enterprises   1,200.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812355 GRN:62859979  Remittance to Treasury   820   0.00   820   8443-00-108-00-00  12   03-06-2022   CrNo: 063386/64   Vikas Enterprises   315.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812356 GRN:62860129  Remittance to Treasury   1,200   0.00   1,200   8443-00-108-00-00  13   03-06-2022   CrNo: 063386/65   Vikas Enterprises   900.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812357 GRN:62860230  Remittance to Treasury   315   0.00   315   8443-00-108-00-00  14   03-06-2022   CrNo: 063386/66   Seema Electricals   1,875.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812358 GRN:62860318  Remittance to Treasury   900   0.00   900   8443-00-108-00-00  15   03-06-2022   CrNo: 063386/67   Seema Electricals   2,715.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812359 GRN:62860383  Remittance to Treasury   1,875   0.00   1,875   8443-00-108-00-00  16   03-06-2022   CrNo: 063386/58   Vikas Enterprises   240.00   8443-00-108-00-00   03-06-2022   ChlnNo: 1812360 GRN:62860465  Remittance to Treasury   2,715   0.00   2,715   8443-00-108-00-00  17   0.00   09-06-2022   Tvno: 20201   GST Adjustment Bill   10671.00   10,671   8658-00-139-00-00  18   13-06-2022   CrNo: Ch No: 2095446  Metro International   500.00   0075-00-800-52-01   13-06-2022   ChlnNo: 2095446 GRN:63362056  Remittance to Treasury   3,900   0.00   3,900   0075-00-800-52-01, 8443- 00-108-00-00  19   13-06-2022   CrNo: Ch No: 2095446  Metro International   3,400.00   8443-00-108-00-00   0.00  20   0.00   16-06-2022   Tvno: 14560   Mitul Enterprises , Paymanager Bill No: 40133642, Bill Type: Deposit Refund  17873.00   17,873   8443-00-108-00-00  21   0.00   16-06-2022   Tvno: 14561   Seema Electricals , Paymanager Bill No: 40133653, Bill Type: Deposit Refund  89473.00   89,473   8443-00-108-00-00  22   0.00   16-06-2022   Tvno: 14562   Vikas Enterprises , Paymanager Bill No: 40133663, Bill Type: Deposit Refund  170964.00   1,70,964   8443-00-108-00-00  23   21-06-2022   TVNo: 15066   Mitul Enterprises (AgreeMentNo 15/2021- 22, Supply and Providing wireman for Elect mtc in Various Residence and Non Residence building Udaipur)  772.00   386: I-Tax, 386: GSTIN Deduction,  21-06-2022   Tvno: 15064   Rahul Sadhwani , Paymanager Bill No: 40133566, Bill Type: HR Payment Less than 30 thousands  4200.00   4,200   4216-01-700-03-90-17-V-P  24   21-06-2022   TVNo: 15067   Mitul Enterprises (AgreeMentNo 15/2021- 22, Supply and Providing wireman for Elect mtc in Various Residence and Non Residence building Udaipur)  915.00   457: I-Tax, 458: GSTIN Deduction,  21-06-2022   Tvno: 15065   Rahul Sadhwani , Paymanager Bill No: 40133578, Bill Type: HR Payment Less than 30 thousands  4200.00   4,200   4216-01-700-03-90-17-V-P  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:02:34 PM) Page 2 of 4"
+        ],
+        [
+          "--- Page 3 ---"
+        ],
+        [
+          "RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  25   21-06-2022   TVNo: 15205   Mitul Enterprises (AgreeMentNo 52/2021- 22, Elect Repair and Mtc work in SP Office Rajsamand 2021-22)  9,048.00   3393: SD2, 2262: I-Tax, 2262: GSTIN Deduction, 1131: Labour-Welfare,  21-06-2022   Tvno: 15066   Mitul Enterprises (Wo.No.:347 , Wo. Date:30/07/2021, AgreeMentNo 15/2021- 22, Supply and Providing wireman for Elect mtc in Various Residence and Non Residence building Udaipur) , Paymanager Bill No: 40133589, Bill Type: Work Order Payments (3 Running)  772   18538.00   19,310   2059-80-053-01-01-21-V-P  26   0.00   21-06-2022   Tvno: 15067   Mitul Enterprises (Wo.No.:347 , Wo. Date:30/07/2021, AgreeMentNo 15/2021- 22, Supply and Providing wireman for Elect mtc in Various Residence and Non Residence building Udaipur) , Paymanager Bill No: 40133627, Bill Type: Work Order Payments (4 Running)  915   21952.00   22,867   2059-80-053-01-01-21-V-P  27   0.00   21-06-2022   Tvno: 15068   H M Engineers , Paymanager Bill No: 40133635, Bill Type: Deposit Refund  200000.00   2,00,000   8443-00-108-00-00  28   0.00   21-06-2022   Tvno: 15069   Gupta Redio and Electricals , Paymanager Bill No: 40133649, Bill Type: Deposit Refund  299903.00   2,99,903   8443-00-108-00-00  29   0.00   21-06-2022   Tvno: 15205   Mitul Enterprises (Wo.No.:1112 , Wo. Date:05/01/2022, AgreeMentNo 52/2021- 22, Elect Repair and Mtc work in SP Office Rajsamand 2021-22) , Paymanager Bill No: 40091421, Bill Type: Work Order Payments (3 & Final)  9,048   104068.00   1,13,116   2059-80-053-12-00-21-V-P  30   24-06-2022   CrNo: Ch No: 2489738  Mitul Enterprises   1,000.00   0075-00-800-52-01   24-06-2022   ChlnNo: 2489738 GRN:63802514  Remittance to Treasury   20,600   0.00   20,600   0075-00-800-52-01, 8443- 00-108-00-00  31   24-06-2022   CrNo: Ch No: 2489738  Mitul Enterprises   19,600.00   8443-00-108-00-00   24-06-2022   ChlnNo: 2493065 GRN:63818796  Remittance to Treasury   20,600   0.00   20,600   0075-00-800-52-01, 8443- 00-108-00-00  32   24-06-2022   CrNo: Ch No: 2493065  Neha Electric   1,000.00   0075-00-800-52-01   0.00  33   24-06-2022   CrNo: Ch No: 2493065  Neha Electric   19,600.00   8443-00-108-00-00   0.00  34   Closing Balance  124057.00   124057.00   1329071.00   1453128.00  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:02:34 PM) Page 3 of 4"
+        ],
+        [
+          "--- Page 4 ---"
+        ],
+        [
+          "Signature of Sr.DAO/DAO/DA with seal   Signature of DO with seal  (A.L.Verma, Sr.D.A.O.)   (Deepak Pareek, Ee Pwd Elect Dn Udaipur)  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:02:34 PM) Page 4 of 4"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 80,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 160
+      },
+      "id": "bee33146-1654-4fbb-b563-c8909d984f9a",
+      "extractedAt": "2025-09-16T11:28:17.902Z"
+    }
+  ]
+}

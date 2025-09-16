@@ -1,0 +1,43 @@
+{
+  "job": {
+    "filename": "rpwa1-1.pdf",
+    "status": "completed",
+    "id": "963012ed-9ffb-4c8f-a623-09ebc296e430",
+    "uploadedAt": "2025-09-16T11:28:17.774Z",
+    "completedAt": "2025-09-16T11:28:17.807Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "963012ed-9ffb-4c8f-a623-09ebc296e430",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "Government of Rajasthan  Public Works Department, Jaipur  PWD103: X.En.PWD. Electric Div.Udr. (12189)  Apr, 2022 CASH BOOK ( Ver 1.0 )  (Refered to in Rules 99, 100, 104, 117, 118, 128, 158 and 686)  Form RPWA 1  RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  1   Opening Balance   0.00  2   0.00   07-04-2022   Tvno: 45   GST Adjustment Bill   345560.00   3,45,560   8658-00-139-00-00  3   09-04-2022   CrNo: Ch No: 216311  ARJUN METALS PVT LTD  1,000.00   0075-00-800-52-01   09-04-2022   ChlnNo: 216311 GRN:61051371  Remittance to Treasury   1,000   0.00   1,000   0075-00-800-52-01  4   11-04-2022   CrNo: Ch No: 232441  Raghu Enterprises   500.00   0075-00-800-52-01   11-04-2022   ChlnNo: 232441 GRN:61097318  Remittance to Treasury   44,900   0.00   44,900   0075-00-800-52-01, 8443- 00-108-00-00  5   11-04-2022   CrNo: Ch No: 232441  Raghu Enterprises   44,400.00   8443-00-108-00-00   11-04-2022   ChlnNo: 262609 GRN:61080091  Remittance to Treasury   33,830   0.00   33,830   0075-00-800-52-01, 8443- 00-108-00-00  6   11-04-2022   CrNo: Ch No: 262609  KRISHNA ELECTRIC STORE PALI  1,000.00   0075-00-800-52-01   11-04-2022   ChlnNo: 269693 GRN:61099218  Remittance to Treasury   10,050   0.00   10,050   0075-00-800-52-01, 8443- 00-108-00-00  7   11-04-2022   CrNo: Ch No: 262609  KRISHNA ELECTRIC STORE PALI  32,830.00   8443-00-108-00-00   0.00  8   11-04-2022   CrNo: Ch No: 269693  Mitul Enterprises   500.00   0075-00-800-52-01   0.00  9   11-04-2022   CrNo: Ch No: 269693  Mitul Enterprises   9,550.00   8443-00-108-00-00   0.00  10   28-04-2022   TVNo: 4485   Mitul Enterprises   1,420.00   1420: I-Tax,   28-04-2022   Tvno: 4485   Mitul Enterprises , Paymanager Bill No: 39077332, Bill Type: HR Payment (Contingency/Misc)  1,420   69592.00   71,012   2216-05-053-01-09-21-V-P  11   28-04-2022   TVNo: 4486   Shubham Electricals and Maintenance (AgreeMentNo 43/2018- 19, SITC of 1 Nos 6 Passenger Elevator in TAD Commissioner Office building Udaipur)  34,578.00   9718: SD2, 1944: I-Tax, 1944: GSTIN Deduction, 972: Labour-Welfare, 20000: MD5,  28-04-2022   Tvno: 4486   Shubham Electricals and Maintenance (Wo.No.:1271 , Wo. Date:17/12/2018, AgreeMentNo 43/2018- 19, SITC of 1 Nos 6 Passenger Elevator in TAD Commissioner Office building Udaipur) , Paymanager Bill No: 39077431, Bill Type: Work Order Payments (3 & Final)  34,578   62605.00   97,183   8443-00-108-00-00  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:01:24 PM) Page 1 of 2"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "Signature of Sr.DAO/DAO/DA with seal   Signature of DO with seal  (A.L.Verma, Sr.D.A.O.)   (Deepak Pareek, Ee Pwd Elect Dn Udaipur)  RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  12   28-04-2022   TVNo: 4487   Mitul Enterprises (AgreeMentNo 8/2021- 22, P/f of light luminaire and Electric repair work in old PG hostel (Near Child Hospital) at RNT Medical college Udaipur)  2,878.00   1439: SD2, 959: I-Tax, 480: Labour-Welfare,  28-04-2022   Tvno: 4487   Mitul Enterprises (Wo.No.:327 , Wo. Date:30/07/2021, AgreeMentNo 8/2021- 22, P/f of light luminaire and Electric repair work in old PG hostel (Near Child Hospital) at RNT Medical college Udaipur) , Paymanager Bill No: 39077461, Bill Type: Work Order Payments (First & Final)  2,878   45094.00   47,972   8443-00-108-00-00  13   Closing Balance  128656.00   128656.00   522851.00   651507.00  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:01:24 PM) Page 2 of 2"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 80,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 80
+      },
+      "id": "846a9a59-f5b8-4846-b844-331614b4f6a6",
+      "extractedAt": "2025-09-16T11:28:17.806Z"
+    }
+  ]
+}

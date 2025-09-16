@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { z } from "zod";
@@ -6,18 +6,34 @@ import { storage } from "./storage";
 import { insertProcessingJobSchema } from "@shared/schema";
 import { pdfProcessor } from "./pdf-processor";
 import { excelGenerator } from "./excel-generator";
+import { 
+  validate, 
+  validateFile, 
+  validateSchema, 
+  validateRequestId,
+  sanitizeInput,
+  fileUploadSchema
+} from "./lib/validation";
+import { query } from "./lib/validation";
+import { logger } from "./lib/logger";
 
 // Configure multer for PDF uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(null, false); // Reject file but don't throw error
+      cb(new Error('Invalid file type. Only PDF and Excel files are allowed.'));
     }
   },
 });
@@ -25,270 +41,276 @@ const upload = multer({
 // Status enum for validation
 const JobStatus = z.enum(['pending', 'processing', 'completed', 'failed']);
 
+// Request schemas
+const createJobSchema = z.object({
+  filename: z.string().min(1, 'Filename is required'),
+  options: z.object({
+    ocr: z.boolean().optional().default(false),
+    extractTables: z.boolean().optional().default(true),
+  }).optional()
+});
+
+const updateJobStatusSchema = z.object({
+  status: JobStatus,
+  error: z.string().optional(),
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Upload PDF files for processing
-  app.post('/api/jobs/upload', upload.single('pdf'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(415).json({ error: 'Only PDF files are allowed' });
-      }
-
-      // Create processing job
-      const job = await storage.createProcessingJob({
-        filename: req.file.originalname,
-        status: 'pending'
-      });
-
-      // Save original file
-      await storage.saveOriginalFile(job.id, {
-        buffer: req.file.buffer,
-        filename: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size
-      });
-
-      res.json({ jobId: job.id, filename: job.filename });
-    } catch (error) {
-      console.error('Upload error:', error);
-      res.status(500).json({ error: 'Failed to upload file' });
-    }
-  });
-
-  // Start processing a job
-  app.post('/api/jobs/:id/process', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const job = await storage.getProcessingJob(id);
-      
-      if (!job) {
-        return res.status(404).json({ error: 'Job not found' });
-      }
-
-      if (job.status !== 'pending' && job.status !== 'failed') {
-        return res.status(400).json({ error: 'Job cannot be processed in current state' });
-      }
-
-      // Verify original PDF exists
-      const originalFile = await storage.getOriginalFile(id);
-      if (!originalFile) {
-        return res.status(409).json({ error: 'Original PDF file not found' });
-      }
-
-      // Update job status to processing
-      await storage.updateProcessingJob(id, { 
-        status: 'processing', 
-        progress: 0,
-        errorMessage: null 
-      });
-
-      // Start background processing
-      pdfProcessor.processJob(id).catch(error => {
-        console.error(`Background processing failed for job ${id}:`, error);
-      });
-      
-      res.json({ message: 'Processing started' });
-    } catch (error) {
-      console.error('Process start error:', error);
-      res.status(500).json({ error: 'Failed to start processing' });
-    }
-  });
-
-  // Get processing status
-  app.get('/api/jobs/:id/status', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const job = await storage.getProcessingJob(id);
-      
-      if (!job) {
-        return res.status(404).json({ error: 'Job not found' });
-      }
-
-      res.json({
-        id: job.id,
-        filename: job.filename,
-        status: job.status,
-        progress: job.progress,
-        uploadedAt: job.uploadedAt,
-        completedAt: job.completedAt,
-        errorMessage: job.errorMessage
-      });
-    } catch (error) {
-      console.error('Status error:', error);
-      res.status(500).json({ error: 'Failed to get job status' });
-    }
-  });
-
-  // Get all jobs
-  app.get('/api/jobs', async (req, res) => {
-    try {
-      const { status, limit } = req.query;
-      const options: { status?: string; limit?: number } = {};
-      
-      if (status && typeof status === 'string') {
-        const statusResult = JobStatus.safeParse(status);
-        if (statusResult.success) {
-          options.status = statusResult.data;
-        } else {
-          return res.status(400).json({ error: 'Invalid status filter' });
-        }
-      }
-      
-      if (limit && typeof limit === 'string') {
-        const parsedLimit = parseInt(limit, 10);
-        if (!isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
-          options.limit = parsedLimit;
-        } else {
-          return res.status(400).json({ error: 'Invalid limit (must be 1-100)' });
-        }
-      }
-
-      const jobs = await storage.getAllProcessingJobs(options);
-      res.json(jobs);
-    } catch (error) {
-      console.error('Get jobs error:', error);
-      res.status(500).json({ error: 'Failed to get jobs' });
-    }
-  });
-
-  // Get job with extracted tables
-  app.get('/api/jobs/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const jobWithTables = await storage.getJobWithTables(id);
-      
-      if (!jobWithTables) {
-        return res.status(404).json({ error: 'Job not found' });
-      }
-
-      res.json(jobWithTables);
-    } catch (error) {
-      console.error('Get job error:', error);
-      res.status(500).json({ error: 'Failed to get job details' });
-    }
-  });
-
-  // Delete a job
-  app.delete('/api/jobs/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteProcessingJob(id);
-      
-      if (!deleted) {
-        return res.status(404).json({ error: 'Job not found' });
-      }
-
-      res.json({ message: 'Job deleted successfully' });
-    } catch (error) {
-      console.error('Delete job error:', error);
-      res.status(500).json({ error: 'Failed to delete job' });
-    }
-  });
-
-  // Download Excel file for a specific table
-  app.get('/api/jobs/:jobId/tables/:tableId/download', async (req, res) => {
-    try {
-      const { jobId, tableId } = req.params;
-      const { format = 'xlsx' } = req.query;
-      
-      const table = await storage.getExtractedTable(tableId);
-      if (!table || table.jobId !== jobId) {
-        return res.status(404).json({ error: 'Table not found' });
-      }
-
-      // Check if Excel file is cached
-      let excelBuffer = await storage.getExcelFile(jobId, tableId);
-      
-      if (!excelBuffer) {
-        // Generate Excel file on demand
-        excelBuffer = await excelGenerator.generateTableExcel(tableId);
-      }
-
-      const job = await storage.getProcessingJob(jobId);
-      const filename = `${job?.filename || 'table'}_table_${table.tableIndex + 1}.${format}`;
-      
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.send(excelBuffer);
-    } catch (error) {
-      console.error('Download table error:', error);
-      res.status(500).json({ error: 'Failed to download table' });
-    }
-  });
-
-  // Download all tables as a single Excel file
-  app.get('/api/jobs/:id/download', async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      const jobWithTables = await storage.getJobWithTables(id);
-      if (!jobWithTables) {
-        return res.status(404).json({ error: 'Job not found' });
-      }
-
-      if (jobWithTables.job.status !== 'completed') {
-        return res.status(400).json({ error: 'Job not completed' });
-      }
-
-      // Check if combined Excel file is cached
-      let excelBuffer = await storage.getExcelFile(id);
-      
-      if (!excelBuffer) {
-        // Generate combined Excel file on demand
-        excelBuffer = await excelGenerator.generateJobExcel(id);
-      }
-
-      const filename = `${jobWithTables.job.filename.replace('.pdf', '')}_extracted_tables.xlsx`;
-      
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.send(excelBuffer);
-    } catch (error) {
-      console.error('Download job error:', error);
-      res.status(500).json({ error: 'Failed to download job results' });
-    }
-  });
-
-  // Reprocess a failed job
-  app.post('/api/jobs/:id/reprocess', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const job = await storage.getProcessingJob(id);
-      
-      if (!job) {
-        return res.status(404).json({ error: 'Job not found' });
-      }
-
-      // Clear previous tables and reset job status
-      const tables = await storage.getExtractedTablesByJobId(id);
-      for (const table of tables) {
-        await storage.deleteExtractedTable(table.id);
-      }
-
-      // Clear cached Excel files
-      await storage.deleteExcelFile(id); // Combined file
-      for (const table of tables) {
-        await storage.deleteExcelFile(id, table.id); // Individual table files
-      }
-
-      await storage.updateProcessingJob(id, { 
-        status: 'pending', 
-        progress: 0, 
-        completedAt: null,
-        errorMessage: null 
-      });
-
-      res.json({ message: 'Job reset for reprocessing' });
-    } catch (error) {
-      console.error('Reprocess error:', error);
-      res.status(500).json({ error: 'Failed to reprocess job' });
-    }
-  });
-
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Upload PDF/Excel files for processing
+  app.post(
+    '/api/jobs',
+    upload.single('file'),
+    validateFile(),
+    validateSchema(createJobSchema),
+    sanitizeInput,
+    async (req, res, next) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'No file uploaded' 
+          });
+        }
+
+        // Create processing job
+        const job = await storage.createProcessingJob({
+          filename: req.file.originalname,
+          status: 'pending',
+          options: req.body.options || {}
+        });
+
+        // Save original file
+        await storage.saveOriginalFile(job.id, {
+          buffer: req.file.buffer,
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size
+        });
+
+        res.status(201).json({ 
+          success: true, 
+          data: { 
+            jobId: job.id, 
+            filename: job.filename,
+            status: job.status,
+            createdAt: job.createdAt
+          } 
+        });
+      } catch (error) {
+        logger.error('Error creating job', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Start processing a job (OCR + table detection)
+  app.post(
+    '/api/jobs/:id/process',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const job = await storage.getProcessingJob(req.params.id);
+        if (!job) {
+          return res.status(404).json({ success: false, message: 'Job not found' });
+        }
+
+        const original = await storage.getOriginalFile(req.params.id);
+        if (!original) {
+          return res.status(409).json({ success: false, message: 'Original file missing' });
+        }
+
+        // Kick off processing in background
+        pdfProcessor.processJob(req.params.id).catch(err => {
+          logger.error('Background processing failed', { error: err });
+        });
+
+        res.json({ success: true, message: 'Processing started' });
+      } catch (error) {
+        logger.error('Error starting processing', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Get job status
+  app.get(
+    '/api/jobs/:id',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const job = await storage.getProcessingJob(req.params.id);
+        if (!job) {
+          return res.status(404).json({
+            success: false,
+            message: 'Job not found',
+          });
+        }
+        
+        res.json({ 
+          success: true, 
+          data: job 
+        });
+      } catch (error) {
+        logger.error('Error fetching job', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Get extracted tables for a job
+  app.get(
+    '/api/jobs/:id/tables',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const jobWithTables = await storage.getJobWithTables(req.params.id);
+        if (!jobWithTables) {
+          return res.status(404).json({ success: false, message: 'Job not found' });
+        }
+        res.json({ success: true, data: jobWithTables.tables });
+      } catch (error) {
+        logger.error('Error fetching tables', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Update job status
+  app.patch(
+    '/api/jobs/:id/status',
+    validate(validateRequestId),
+    validateSchema(updateJobStatusSchema),
+    sanitizeInput,
+    async (req, res, next) => {
+      try {
+        const job = await storage.updateProcessingJobStatus(
+          req.params.id, 
+          req.body.status,
+          req.body.error
+        );
+        
+        if (!job) {
+          return res.status(404).json({
+            success: false,
+            message: 'Job not found',
+          });
+        }
+        
+        res.json({ 
+          success: true, 
+          data: job 
+        });
+      } catch (error) {
+        logger.error('Error updating job status', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Download processed file
+  app.get(
+    '/api/jobs/:id/download',
+    validate(validateRequestId),
+    async (req, res, next) => {
+      try {
+        const job = await storage.getProcessingJob(req.params.id);
+        if (!job || job.status !== 'completed') {
+          return res.status(404).json({
+            success: false,
+            message: 'Processed file not found or job not completed',
+          });
+        }
+        
+        const file = await storage.getProcessedFile(job.id);
+        if (!file) {
+          return res.status(404).json({
+            success: false,
+            message: 'Processed file not found',
+          });
+        }
+        
+        res.setHeader('Content-Type', file.mimeType);
+        res.setHeader('Content-Length', file.size);
+        res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+        
+        res.send(file.buffer);
+      } catch (error) {
+        logger.error('Error downloading file', { error });
+        next(error);
+      }
+    }
+  );
+
+  // List all jobs with pagination
+  app.get(
+    '/api/jobs',
+    validate([
+      query('page').optional().isInt({ min: 1 }).toInt(10).default(1),
+      query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(10).default(10),
+      query('status').optional().isIn(['pending', 'processing', 'completed', 'failed']),
+    ]),
+    async (req, res, next) => {
+      try {
+        const { page, pageSize, status } = req.query as {
+          page: number;
+          pageSize: number;
+          status?: 'pending' | 'processing' | 'completed' | 'failed';
+        };
+        
+        const { jobs, total } = await storage.listProcessingJobs({
+          page,
+          pageSize,
+          status,
+        });
+        
+        res.json({
+          success: true,
+          data: jobs,
+          pagination: {
+            page,
+            pageSize,
+            total,
+            totalPages: Math.ceil(total / pageSize),
+          },
+        });
+      } catch (error) {
+        logger.error('Error listing jobs', { error });
+        next(error);
+      }
+    }
+  );
+
+  // Error handling middleware
+  app.use((err: any, req: Request, res: Response, next: any) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        success: false,
+        message: 'File upload error',
+        error: err.message,
+      });
+    }
+    
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: err.errors,
+      });
+    }
+    
+    logger.error('Unhandled error', { error: err });
+    
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { error: err.message }),
+    });
+  });
+
+  return createServer(app);
 }

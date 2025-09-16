@@ -1,0 +1,49 @@
+{
+  "job": {
+    "filename": "rpwa1-2.pdf",
+    "status": "completed",
+    "id": "a661c2db-fef5-44a2-b4e3-21ab5a44eca7",
+    "uploadedAt": "2025-09-16T11:28:17.813Z",
+    "completedAt": "2025-09-16T11:28:17.847Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "a661c2db-fef5-44a2-b4e3-21ab5a44eca7",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "Government of Rajasthan  Public Works Department, Jaipur  PWD103: X.En.PWD. Electric Div.Udr. (12189)  May, 2022 CASH BOOK ( Ver 1.0 )  (Refered to in Rules 99, 100, 104, 117, 118, 128, 158 and 686)  Form RPWA 1  RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  1   Opening Balance   0.00  2   0.00   12-05-2022   Tvno: 394   GST Adjustment Bill   1944.00   1,944   8658-00-139-00-00  3   19-05-2022   TVNo: 8634   Arun Electricals (AgreeMentNo 56/2021- 22, Electric Repair and Mtc work in Treasury Office Rajsamand)  77,534.00   2825: SD2, 1883: I-Tax, 1884: GSTIN Deduction, 942: Labour-Welfare, 70000: MD5,  19-05-2022   Tvno: 8634   Arun Electricals (Wo.No.:1136 , Wo. Date:06/01/2022, AgreeMentNo 56/2021- 22, Electric Repair and Mtc work in Treasury Office Rajsamand) , Paymanager Bill No: 39077374, Bill Type: Work Order Payments (2 & Final)  77,534   16616.00   94,150   2059-80-053-19-00-21-V-P  4   0.00   19-05-2022   Tvno: 8635   BHARTI KASERA , Paymanager Bill No: 39089755, Bill Type: HR Payment Less than 30 thousands  8475.00   8,475   2059-80-053-01-01-21-V-P  5   0.00   19-05-2022   Tvno: 8636   Royal Computech , Paymanager Bill No: 39089782, Bill Type: HR Payment Less than 30 thousands  1900.00   1,900   8443-00-108-00-00  6   24-05-2022   CrNo: Ch No: 1464429  Anju Electricals   200.00   0075-00-800-52-01   24-05-2022   ChlnNo: 1464429 GRN:62568101  Remittance to Treasury   1,500   0.00   1,500   0075-00-800-52-01, 8443- 00-108-00-00  7   24-05-2022   CrNo: Ch No: 1464429  Anju Electricals   1,300.00   8443-00-108-00-00   0.00  8   26-05-2022   CrNo: 063386/55   Seema Electricals   800.00   0075-00-800-52-01   26-05-2022   ChlnNo: 1560751 GRN:62656111  Remittance to Treasury   2,800   0.00   2,800   0075-00-800-52-01, 8443- 00-108-00-00  9   26-05-2022   CrNo: 063386/56   Vikas Enterprises   1,800.00   0075-00-800-52-01   26-05-2022   Tvno: 9875   Yashaswini Enterprises , Paymanager Bill No: 39859688, Bill Type: Deposit Refund  131958.00   1,31,958   8443-00-108-00-00  10   26-05-2022   CrNo: Ch No: 1560751  Sheetal Refrigeration and Electricals  200.00   0075-00-800-52-01   0.00  11   26-05-2022   CrNo: Ch No: 1560751  Sheetal Refrigeration and Electricals  2,600.00   8443-00-108-00-00   0.00  12   0.00   27-05-2022   ChlnNo: 1614831 GRN:62702956  Remittance to Treasury   2,600   0.00   2,600   0075-00-800-52-01  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:01:54 PM) Page 1 of 3"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  13   31-05-2022   TVNo: 10401   Mitul Enterprises (AgreeMentNo 75/2021- 22, Electric Repair and Maintenance work in Residence No J1/3, Judge Commercial Court, Udaipur)  3,473.00   1736: SD2, 1158: I-Tax, 579: Labour-Welfare,  31-05-2022   Tvno: 10401   Mitul Enterprises (Wo.No.:122985400 , Wo. Date:11/03/2022, AgreeMentNo 75/2021- 22, Electric Repair and Maintenance work in Residence No J1/3, Judge Commercial Court, Udaipur) , Paymanager Bill No: 39859593, Bill Type: Work Order Payments (1 & Final)  3,473   54397.00   57,870   2216-05-053-02-02-21-V-P  14   31-05-2022   TVNo: 10402   Santosh Electricals   84.00   84: I-Tax,   31-05-2022   Tvno: 10402   Santosh Electricals , Paymanager Bill No: 39859627, Bill Type: HR Payment Less than 30 thousands  84   4116.00   4,200   2216-05-053-02-02-21-V-P  15   31-05-2022   TVNo: 10403   Santosh Electricals   38.00   38: I-Tax,   31-05-2022   Tvno: 10403   Santosh Electricals , Paymanager Bill No: 39859638, Bill Type: HR Payment Less than 30 thousands  38   1862.00   1,900   2216-05-053-02-02-21-V-P  16   31-05-2022   TVNo: 10406   Bharti Decorators   781.00   781: I-Tax,   31-05-2022   Tvno: 10404   Arun Electricals , Paymanager Bill No: 39859668, Bill Type: Deposit Refund  8949.00   8,949   8443-00-108-00-00  17   31-05-2022   TVNo: 10407   Bharti Decorators   140.00   140: I-Tax,   31-05-2022   Tvno: 10405   Krim Engineering , Paymanager Bill No: 39859682, Bill Type: Deposit Refund  20709.00   20,709   8443-00-108-00-00  18   31-05-2022   TVNo: 10408   Mitul Enterprises   217.00   217: I-Tax,   31-05-2022   Tvno: 10406   Bharti Decorators , Paymanager Bill No: 39859702, Bill Type: HR Payment (Contingency/Misc)  781   38268.00   39,049   2059-80-053-01-01-21-V-P  19   31-05-2022   TVNo: 10409   Abhinav Engineering and Suppliers  47.00   47: I-Tax,   31-05-2022   Tvno: 10407   Bharti Decorators , Paymanager Bill No: 39859708, Bill Type: HR Payment Less than 30 thousands  140   6866.00   7,006   2059-80-053-01-01-21-V-P  20   31-05-2022   TVNo: 10410   Abhinav Engineering and Suppliers  59.00   59: I-Tax,   31-05-2022   Tvno: 10408   Mitul Enterprises , Paymanager Bill No: 39859715, Bill Type: HR Payment Less than 30 thousands  217   10636.00   10,853   2059-80-053-01-01-21-V-P  21   31-05-2022   TVNo: 10411   Vikas Enterprises (AgreeMentNo 29/2021- 22, Supply of experienced wireman Electricians for day to day maintenance for MB hospital and its associates building Udaipur)  971.00   485: I-Tax, 486: GSTIN Deduction,  31-05-2022   Tvno: 10409   Abhinav Engineering and Suppliers , Paymanager Bill No: 39859720, Bill Type: HR Payment Less than 30 thousands  47   2313.00   2,360   2059-80-053-01-01-21-V-P  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:01:54 PM) Page 2 of 3"
+        ],
+        [
+          "--- Page 3 ---"
+        ],
+        [
+          "Signature of Sr.DAO/DAO/DA with seal   Signature of DO with seal  (A.L.Verma, Sr.D.A.O.)   (Deepak Pareek, Ee Pwd Elect Dn Udaipur)  RECEIPT SIDE   PAYMENT SIDE  S No.  Date of Receipt  Voucher No / Receipt No  From whom Received  Amount (Cash)  Classification of Receipt  Date of Payment  Voucher No.   To whom Paid   Payments   Classification of Charges  Cash   Treasury   Total  22   0.00   31-05-2022   Tvno: 10410   Abhinav Engineering and Suppliers , Paymanager Bill No: 39859726, Bill Type: HR Payment Less than 30 thousands  59   2891.00   2,950   2059-80-053-01-01-21-V-P  23   0.00   31-05-2022   Tvno: 10411   Vikas Enterprises (Wo.No.:531 , Wo. Date:01/09/2021, AgreeMentNo 29/2021- 22, Supply of experienced wireman Electricians for day to day maintenance for MB hospital and its associates building Udaipur) , Paymanager Bill No: 39859735, Bill Type: Work Order Payments (3 Running)  971   23261.00   24,232   8443-00-108-00-00  24   0.00   31-05-2022   Tvno: 10446   BHARTI KASERA , Paymanager Bill No: 39882013, Bill Type: HR Payment Less than 30 thousands  8495.00   8,495   2059-80-053-01-01-21-V-P  25   0.00   31-05-2022   Tvno: 10447   Sysnet Services , Paymanager Bill No: 39882016, Bill Type: HR Payment Less than 30 thousands  3050.00   3,050   2059-80-053-01-01-21-V-P  26   Closing Balance  90244.00   90244.00   346706.00   436950.00  Courtesy: https://wam.rajasthan.gov.in (Printed on 9/15/2025 5:01:54 PM) Page 3 of 3"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 80,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 120
+      },
+      "id": "7baf1d5f-effd-4e80-a0ae-4bf42a5176ed",
+      "extractedAt": "2025-09-16T11:28:17.847Z"
+    }
+  ]
+}

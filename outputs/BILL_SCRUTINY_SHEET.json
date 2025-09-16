@@ -1,0 +1,37 @@
+{
+  "job": {
+    "filename": "BILL_SCRUTINY_SHEET.pdf",
+    "status": "completed",
+    "id": "9a0cf262-a8b8-4944-b99a-55185db72810",
+    "uploadedAt": "2025-09-16T11:28:16.907Z",
+    "completedAt": "2025-09-16T11:28:17.600Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "9a0cf262-a8b8-4944-b99a-55185db72810",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "RUNNING / & FINAL BILL NOTE SHEET 1. Budget Head 2. Agreement No. 3. A&F Sanction 4. Technical Section 5. MB No. & Page 6. Name of Sub Division 7. Name of Work 8. Name of Contractor 9. Original/Deposit 10. Budget Provision 11. Date of Commencement 12. Date of Completion 13. Actual date of completion 14.   In case Delay whether provisional extension given No & Date 15. Whether any notice issued 16. Total Amount of work order 17. A. Sum of payment upto last bill B. Amount of this bill C. Actual expenditure upto this bill = ( A + B) 18. Balance to be done = (16 - 17 C) 19.   Prorata Progress on the work maintained by the contractor 20.   Date on which record measurement taken by AEN 21. Date of and % of work checked by AEN 22. Number of selective Items checked by XEN 23. Deductions SD @ 10%   – Rs. IT @ 2%   – Rs. GST @ 2%   – Rs. LC @ 1%   – Rs. Dep-V   – Rs. Cheque/Amount   – Rs. Total Priyanka_Innovation_2025"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 80,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 40
+      },
+      "id": "69589dfd-90d3-4e3e-93e0-d233121cf7fc",
+      "extractedAt": "2025-09-16T11:28:17.600Z"
+    }
+  ]
+}

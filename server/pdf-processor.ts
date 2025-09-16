@@ -1,11 +1,15 @@
 import { createWorker, PSM } from 'tesseract.js';
 import { fromPath } from 'pdf2pic';
 import sharp from 'sharp';
+import pdfParse from 'pdf-parse';
 import { storage } from './storage';
 import type { OriginalFile } from './storage';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
 export interface ProcessingOptions {
   ocrLanguage?: string;
@@ -52,25 +56,44 @@ export class PDFProcessor {
         throw new Error('Original PDF file not found');
       }
 
-      // Step 1: Skip text extraction for now (10% progress)
-      await this.updateProgress(jobId, 10, 'Preparing PDF for processing...');
-      const pdfText = ''; // Skip PDF text extraction to avoid dependency issues
+      // Step 1: Extract embedded text from PDF (text-based PDFs)
+      await this.updateProgress(jobId, 10, 'Extracting text from PDF...');
+      const pdfText = await this.extractTextFromPDF(originalFile.buffer);
 
-      // Step 2: OCR processing if needed (40% progress)
-      await this.updateProgress(jobId, 40, 'Performing OCR on scanned pages...');
-      const ocrText = await this.performOCR(originalFile.buffer, options.ocrLanguage || 'eng');
+      // Step 2: Optionally perform OCR (disabled by default in batch-run environment)
+      let ocrText = '';
+      if (options.ocrLanguage) {
+        await this.updateProgress(jobId, 40, 'Performing OCR on scanned pages...');
+        ocrText = await this.performOCR(originalFile.buffer, options.ocrLanguage || 'eng');
+      }
 
-      // Step 3: Combine and analyze text (60% progress)
+      // Step 3: Analyze text content
       await this.updateProgress(jobId, 60, 'Analyzing text content...');
       const combinedText = this.combineTextSources(pdfText, ocrText);
 
       // Step 4: Detect tables (80% progress)
       await this.updateProgress(jobId, 80, 'Detecting and extracting tables...');
-      const tables = await this.detectTables(
-        combinedText,
-        options.confidenceThreshold || 70,
-        options.tableDetectionSensitivity || 'medium'
-      );
+      // Try layout-based extraction first
+      let tables = await this.detectTablesByLayout(originalFile.buffer);
+      // Fallback to regex-based detection on text
+      if (tables.length === 0) {
+        tables = await this.detectTables(
+          combinedText,
+          options.confidenceThreshold || 70,
+          options.tableDetectionSensitivity || 'medium'
+        );
+      }
+      // Final fallback: single-column of all lines
+      if (tables.length === 0) {
+        const lines = combinedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        tables = [{
+          tableIndex: 0,
+          headers: ['Text'],
+          data: lines.map(line => [line]),
+          confidence: 80,
+          boundingBox: { x: 0, y: 0, width: 100, height: Math.max(20, lines.length * 20) }
+        }];
+      }
 
       // Step 5: Save extracted tables (95% progress)
       await this.updateProgress(jobId, 95, 'Saving extracted data...');
@@ -111,9 +134,133 @@ export class PDFProcessor {
   }
 
   private async extractTextFromPDF(buffer: Buffer): Promise<string> {
-    // Temporarily disabled due to pdf-parse dependency issues
-    // Will rely on OCR for all text extraction
-    return '';
+    try {
+      // Configure pdfjs worker for Node
+      try {
+        const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+        const fileUrl = 'file:///' + workerPath.replace(/\\/g, '/');
+        GlobalWorkerOptions.workerSrc = fileUrl as any;
+      } catch {}
+
+      // Use pdfjs-dist legacy build to extract text content in Node
+      const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+      const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false, useWorkerFetch: false, useSystemFonts: true, disableFontFace: true });
+      const pdf = await loadingTask.promise;
+      let fullText = '';
+      const numPages = Math.min(pdf.numPages, 50);
+      for (let p = 1; p <= numPages; p++) {
+        const page = await pdf.getPage(p);
+        const textContent = await page.getTextContent({ disableCombineTextItems: false });
+        const pageText = (textContent.items as any[]).map((i) => (i.str || '')).join(' ');
+        fullText += `\n\n--- Page ${p} ---\n` + pageText + '\n';
+      }
+      return fullText;
+    } catch (error) {
+      console.error('PDF text extraction (pdfjs) failed:', error);
+      return '';
+    }
+  }
+
+  private async detectTablesByLayout(buffer: Buffer): Promise<TableDetectionResult[]> {
+    try {
+      const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+      const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false });
+      const pdf = await loadingTask.promise;
+      const allTables: TableDetectionResult[] = [];
+
+      let tableCounter = 0;
+      for (let p = 1; p <= Math.min(pdf.numPages, 10); p++) {
+        const page = await pdf.getPage(p);
+        const textContent = await page.getTextContent({ disableCombineTextItems: false });
+        const items = (textContent.items as any[]).filter(i => i && typeof i.str === 'string' && i.str.trim().length > 0);
+        if (items.length === 0) continue;
+
+        // Cluster by Y (rows)
+        const yTolerance = 3; // pixels
+        const rows: Array<{ y: number; items: any[] }> = [];
+        for (const it of items) {
+          const y = Math.round((it.transform?.[5] ?? it.y) * 100) / 100;
+          let row = rows.find(r => Math.abs(r.y - y) <= yTolerance);
+          if (!row) {
+            row = { y, items: [] };
+            rows.push(row);
+          }
+          row.items.push(it);
+        }
+        rows.sort((a, b) => b.y - a.y); // top to bottom
+        rows.forEach(r => r.items.sort((a, b) => (a.transform?.[4] ?? a.x) - (b.transform?.[4] ?? b.x)));
+
+        // Detect column cut positions by analyzing gaps between consecutive x positions
+        const xPositions: number[] = [];
+        for (const r of rows) {
+          for (const it of r.items) {
+            const x = Math.round((it.transform?.[4] ?? it.x) * 100) / 100;
+            xPositions.push(x);
+          }
+        }
+        xPositions.sort((a, b) => a - b);
+        const gapThreshold = 20; // pixels gap to consider a new column
+        const cuts: number[] = [];
+        for (let i = 1; i < xPositions.length; i++) {
+          if (xPositions[i] - xPositions[i - 1] > gapThreshold) {
+            cuts.push(xPositions[i]);
+          }
+        }
+        // Create bins from cuts
+        const columns: Array<{ minX: number; maxX: number }> = [];
+        const minX = xPositions[0] ?? 0;
+        const maxX = xPositions[xPositions.length - 1] ?? 0;
+        const bins = [minX, ...cuts, maxX + 1];
+        for (let i = 0; i < bins.length - 1; i++) {
+          columns.push({ minX: bins[i], maxX: bins[i + 1] });
+        }
+        // If columns look unreasonable, skip this page
+        if (columns.length < 2 || columns.length > 12) continue;
+
+        // Build a table grid
+        const grid: string[][] = rows.map(() => Array(columns.length).fill(''));
+        rows.forEach((r, ri) => {
+          for (const it of r.items) {
+            const x = (it.transform?.[4] ?? it.x);
+            const colIndex = Math.max(0, columns.findIndex(c => x >= c.minX && x < c.maxX));
+            grid[ri][colIndex] = (grid[ri][colIndex] ? grid[ri][colIndex] + ' ' : '') + it.str.trim();
+          }
+        });
+
+        // Clean empty rows and columns
+        const nonEmptyRows = grid.filter(row => row.some(cell => cell.trim().length > 0));
+        const colCount = Math.max(...nonEmptyRows.map(r => r.length), 0);
+        const nonEmptyCols = Array.from({ length: colCount }, (_, c) => nonEmptyRows.some(r => (r[c] || '').trim().length > 0));
+        const cleaned = nonEmptyRows.map(r => r.filter((_, c) => nonEmptyCols[c]));
+        if (cleaned.length === 0) continue;
+
+        // Heuristic: first non-empty row as headers if mostly non-numeric
+        const headerRow = cleaned[0];
+        const isHeader = headerRow.filter(cell => !/[\d$%]/.test(cell)).length >= Math.ceil(headerRow.length * 0.6);
+        const headers = isHeader ? headerRow.map(h => h || `Column`) : Array.from({ length: headerRow.length }, (_, i) => `Column ${i + 1}`);
+        const data = (isHeader ? cleaned.slice(1) : cleaned).map(r => r.map(c => c?.trim() || ''));
+
+        // Confidence: based on column consistency and non-empty content
+        let confidence = 60;
+        const consistentCols = data.every(r => r.length === headers.length);
+        if (consistentCols) confidence += 20;
+        const nonEmpty = data.flat().filter(c => c.trim().length > 0).length;
+        if (nonEmpty > data.length) confidence += 10;
+
+        allTables.push({
+          tableIndex: tableCounter++,
+          headers,
+          data,
+          confidence,
+          boundingBox: { x: columns[0]?.minX ?? 0, y: rows[0]?.y ?? 0, width: (columns.at(-1)?.maxX ?? 0) - (columns[0]?.minX ?? 0), height: rows.length * 12 }
+        });
+      }
+
+      return allTables;
+    } catch (err) {
+      console.error('Layout-based detection failed:', err);
+      return [];
+    }
   }
 
   private async performOCR(buffer: Buffer, language: string): Promise<string> {
