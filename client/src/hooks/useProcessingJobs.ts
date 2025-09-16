@@ -30,7 +30,7 @@ export function useProcessingJobs() {
         formData.append('pdf', file);
         
         const response = await apiRequest('POST', '/api/jobs/upload', formData);
-        return response.json() as Promise<{ id: string; message: string }>;
+        return response.json() as Promise<{ id: string; filename: string }>;
       });
       
       return Promise.all(uploadPromises);
@@ -142,7 +142,7 @@ export function useProcessingJobs() {
       
       // Start processing the first uploaded file
       if (results.length > 0) {
-        const jobId = results[0].jobId;
+        const jobId = results[0].id;
         setCurrentJobId(jobId);
         await startProcessingMutation.mutateAsync(jobId);
       }

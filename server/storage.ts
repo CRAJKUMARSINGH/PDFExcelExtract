@@ -23,8 +23,8 @@ export interface JobWithTables {
 export interface UpdateJobInput {
   status?: string;
   progress?: number;
-  completedAt?: Date;
-  errorMessage?: string;
+  completedAt?: Date | null;
+  errorMessage?: string | null;
 }
 
 export interface UpdateTableInput {

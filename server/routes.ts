@@ -47,7 +47,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: req.file.size
       });
 
-      res.json({ jobId: job.id, filename: job.filename });
+      // Normalize response to { id, filename } for client compatibility
+      res.json({ id: job.id, filename: job.filename });
     } catch (error) {
       console.error('Upload error:', error);
       res.status(500).json({ error: 'Failed to upload file' });
@@ -143,7 +144,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const jobs = await storage.getAllProcessingJobs(options);
-      res.json(jobs);
+      // Enrich jobs with extracted tables and preview counts for client rendering
+      const jobsWithTables = await Promise.all(jobs.map(async (job) => {
+        const tables = await storage.getExtractedTablesByJobId(job.id);
+        const previewTables = tables.map((t) => ({
+          ...t,
+          rowCount: Array.isArray(t.data) ? t.data.length : 0,
+          colCount: Array.isArray(t.headers) ? t.headers.length : 0,
+        }));
+        return { ...job, tables: previewTables };
+      }));
+
+      res.json(jobsWithTables);
     } catch (error) {
       console.error('Get jobs error:', error);
       res.status(500).json({ error: 'Failed to get jobs' });

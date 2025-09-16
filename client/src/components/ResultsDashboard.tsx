@@ -12,8 +12,8 @@ interface ProcessingJob {
   id: string
   filename: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
-  uploadedAt: Date
-  completedAt?: Date
+  uploadedAt: string | Date
+  completedAt?: string | Date
   progress: number
   tables: TablePreviewType[]
   errorMessage?: string
@@ -62,13 +62,14 @@ export function ResultsDashboard({
     }
   }
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string | Date) => {
+    const d = typeof date === 'string' ? new Date(date) : date
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date)
+    }).format(d)
   }
 
   const selectedJobData = selectedJob ? jobs.find(job => job.id === selectedJob) : null
