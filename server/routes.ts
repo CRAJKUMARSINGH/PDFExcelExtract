@@ -61,6 +61,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // Simple convert endpoint for Python GUI
+  app.post('/api/convert', upload.single('file'), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No file uploaded' 
+        });
+      }
+
+      // Get conversion options
+      const convertToExcel = req.body.excel !== 'false';
+      const convertToWord = req.body.word !== 'false';
+      
+      // In a real implementation, this would process the file
+      // For now, we'll return mock data
+      const result: any = {
+        success: true,
+        filename: req.file.originalname,
+        processedAt: new Date().toISOString(),
+      };
+      
+      // Add mock data based on conversion options
+      if (convertToExcel) {
+        result.excel_data = `Mock Excel data for ${req.file.originalname}`;
+      }
+      
+      if (convertToWord) {
+        result.word_data = `Mock Word data for ${req.file.originalname}`;
+      }
+      
+      res.json(result);
+    } catch (error) {
+      logger.error('Error converting file', { error });
+      next(error);
+    }
+  });
+
   // Upload PDF/Excel files for processing
   app.post(
     '/api/jobs',
