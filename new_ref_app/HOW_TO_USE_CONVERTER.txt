@@ -1,0 +1,61 @@
+HOW TO CONVERT PDFs TO WORD AND EXCEL
+===================================
+
+EASY STEPS:
+-----------
+
+1. DOUBLE-CLICK on "convert_and_save.bat"
+   - This will automatically install required software
+   - Then convert all PDF files in this folder
+   - Output will be saved in the "output" folder
+
+2. WAIT for the process to complete
+   - You'll see progress messages in the window
+   - This may take 2-5 minutes depending on how many files you have
+
+3. CHECK the "output" folder
+   - All converted documents will be there
+   - Each PDF will have both a .docx (Word) and .xlsx (Excel) version
+
+WHAT THIS WILL DO:
+-----------------
+
+Convert these PDF files to BOTH formats:
+- ACE Scanner_2025_11_19(1).pdf → ACE Scanner_2025_11_19(1).docx AND ACE Scanner_2025_11_19(1).xlsx
+- ACE Scanner_2025_11_19(2).pdf → ACE Scanner_2025_11_19(2).docx AND ACE Scanner_2025_11_19(2).xlsx
+- ACE Scanner_2025_11_19(4).pdf → ACE Scanner_2025_11_19(4).docx AND ACE Scanner_2025_11_19(4).xlsx
+- ACE Scanner_2025_11_19.pdf → ACE Scanner_2025_11_19.docx AND ACE Scanner_2025_11_19.xlsx
+- PADLI MANOHAR JI.pdf → PADLI MANOHAR JI.docx AND PADLI MANOHAR JI.xlsx
+- RETWALL BILL.pdf → RETWALL BILL.docx AND RETWALL BILL.xlsx
+- SLAB REINFORCEMENT.pdf → SLAB REINFORCEMENT.docx AND SLAB REINFORCEMENT.xlsx
+- bill bridge only.pdf → bill bridge only.docx AND bill bridge only.xlsx
+- r1.pdf → r1.docx AND r1.xlsx
+- r2.pdf → r2.docx AND r2.xlsx
+- r3.pdf → r3.docx AND r3.xlsx
+- r4.pdf → r4.docx AND r4.xlsx
+- slab.pdf → slab.docx AND slab.xlsx
+
+TOTAL: 13 PDF files → 26 converted documents
+
+TECHNICAL INFORMATION:
+--------------------
+
+- Uses PyPDF2 to extract text from PDFs
+- Creates proper Word documents with python-docx
+- Generates real Excel files with openpyxl
+- Preserves document structure where possible
+- Saves all output in the "output" folder
+
+NEED HELP?
+----------
+
+If you encounter any issues:
+
+1. Make sure Python is installed on your computer
+   - Download from: https://www.python.org/downloads/
+   - During installation, CHECK "Add Python to PATH"
+
+2. Make sure you're connected to the internet
+   - Required packages will be downloaded automatically
+
+3. If problems persist, contact technical support

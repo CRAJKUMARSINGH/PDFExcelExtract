@@ -1,0 +1,54 @@
+QUICK START: CONVERT ALL PDFs TO WORD & EXCEL
+==========================================
+
+✅ JUST DO THIS:
+
+1. DOUBLE-CLICK ON "convert_all_pdfs.bat"
+
+That's it! The program will:
+
+1. Automatically check if you have Python
+2. Install everything needed (if missing)
+3. Convert all 13 PDF files to BOTH:
+   - Microsoft Word documents (.docx)
+   - Excel spreadsheets (.xlsx)
+4. Put all converted files in "Converted_Files" folder
+
+📁 WHAT YOU HAVE:
+---------------
+
+13 PDF files that will be converted:
+- ACE Scanner_2025_11_19(1).pdf
+- ACE Scanner_2025_11_19(2).pdf
+- ACE Scanner_2025_11_19(4).pdf
+- ACE Scanner_2025_11_19.pdf
+- PADLI MANOHAR JI.pdf
+- RETWALL BILL.pdf
+- SLAB REINFORCEMENT.pdf
+- bill bridge only.pdf
+- r1.pdf, r2.pdf, r3.pdf, r4.pdf
+- slab.pdf
+
+You'll get 26 converted files (13 Word + 13 Excel)
+
+⏱ HOW LONG IT TAKES:
+-------------------
+
+- Installation: 1-2 minutes (first time only)
+- Conversion: 2-5 minutes (depending on file sizes)
+
+📍 WHERE TO FIND YOUR FILES:
+--------------------------
+
+After conversion, check the new "Converted_Files" folder:
+F:\LEGAL CONSULTANCY\PUNJAPUR\PADLI BRIDGE BILL\Converted_Files
+
+Having Issues?
+-------------
+
+If it doesn't work:
+1. Run "enhanced_installer.bat" first
+2. Make sure Python is installed on your computer
+3. Contact support if problems continue
+
+👉 READY? Just double-click on "convert_all_pdfs.bat"!

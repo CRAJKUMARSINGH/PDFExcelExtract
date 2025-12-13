@@ -1,0 +1,70 @@
+ADVANCED PDF CONVERTER - FORMATTED OUTPUT
+=====================================
+
+THIS CONVERTER PRESERVES TABLES AND FORMATTING!
+
+PROBLEM ADDRESSED:
+-----------------
+Regular text-to-cell conversion creates unstructured data.
+This advanced converter preserves tables, formatting, and structure.
+
+WHAT THIS CONVERTER DOES:
+-----------------------
+
+1. DETECTS AND PRESERVES TABLES
+   - Tables from PDFs are converted to proper Excel tables
+   - Column and row structures maintained
+   - Cell data preserved accurately
+
+2. CREATES FORMATTED WORD DOCUMENTS
+   - Proper headings and sections
+   - Tables converted to Word table format
+   - Page breaks preserved
+
+3. HANDLES ENGINEERING DOCUMENTS BETTER
+   - Bridge bills
+   - Reinforcement schedules
+   - Technical specifications
+   - Tabular data
+
+HOW TO USE:
+----------
+
+1. DOUBLE-CLICK on "run_advanced_converter.bat"
+2. Wait for installation and conversion (5-10 minutes)
+3. Check "formatted_output" folder for results
+
+OUTPUT FILES:
+------------
+
+For each PDF, you'll get two files:
+- *_FORMATTED.docx - Formatted Word document with tables
+- *_TABLES.xlsx - Excel file with proper table structures
+
+EXAMPLE:
+-------
+ACE Scanner_2025_11_19(1).pdf becomes:
+- ACE Scanner_2025_11_19(1)_FORMATTED.docx
+- ACE Scanner_2025_11_19(1)_TABLES.xlsx
+
+TECHNOLOGY USED:
+---------------
+
+- pdfplumber: Advanced PDF table extraction
+- pandas: Data structure management
+- python-docx: Formatted Word document creation
+- openpyxl: Structured Excel file generation
+
+BENEFITS FOR YOUR WORK:
+---------------------
+
+✓ Proper table structures in Excel
+✓ Editable formatted Word documents
+✓ Preserved engineering data relationships
+✓ Professional document presentation
+✓ Time savings on manual formatting
+
+READY TO USE:
+------------
+
+Just double-click on "run_advanced_converter.bat" to begin!

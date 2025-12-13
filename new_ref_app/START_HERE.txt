@@ -1,0 +1,41 @@
+PDF TO EXCEL/WORD CONVERTER SOLUTION
+===================================
+
+To get started with converting your scanned PDF documents:
+
+1. RUN FIRST: Double-click on "enhanced_installer.bat"
+   - This will install all required components
+   - Follow any prompts for additional software installation
+
+2. AFTER INSTALLATION: Double-click on "run_converter.bat"
+   - This will start the PDF conversion application
+   - Use the graphical interface to select your files and convert them
+
+KEY FILES IN THIS FOLDER:
+------------------------
+- enhanced_installer.bat     ← RUN THIS FIRST
+- run_converter.bat         ← RUN THIS AFTER INSTALLATION
+- complete_pdf_converter.py ← Main application (do not run directly)
+- requirements.txt          ← Python package list
+- README.md                ← Detailed documentation
+- HOW_TO_USE.txt           ← Step-by-step instructions
+- SOLUTION_SUMMARY.txt     ← Overview of the solution
+
+YOUR PDF FILES:
+--------------
+The following PDF files were detected in this folder and can be converted:
+- ACE Scanner_2025_11_19(1).pdf
+- ACE Scanner_2025_11_19(2).pdf
+- ACE Scanner_2025_11_19(4).pdf
+- ACE Scanner_2025_11_19.pdf
+- PADLI MANOHAR JI.pdf
+- RETWALL BILL.pdf
+- SLAB REINFORCEMENT.pdf
+- bill bridge only.pdf
+- r1.pdf, r2.pdf, r3.pdf, r4.pdf
+- slab.pdf
+
+For best results with your engineering/construction documents:
+1. Use high-resolution scans (300 DPI or higher)
+2. Ensure good contrast between text and background
+3. Review converted files for accuracy, especially numerical data

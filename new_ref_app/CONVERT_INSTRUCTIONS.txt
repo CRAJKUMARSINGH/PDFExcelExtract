@@ -1,0 +1,52 @@
+HOW TO CONVERT ALL PDF FILES TO WORD AND EXCEL
+============================================
+
+Simple Steps:
+------------
+
+1. DOUBLE-CLICK on "convert_all_pdfs.bat"
+   - This will automatically install required software
+   - Then convert all PDF files in this folder
+   - Both Word (.docx) and Excel (.xlsx) versions will be created
+
+2. WAIT for the process to complete
+   - You'll see progress messages in the window
+   - This may take a few minutes depending on the number of files
+
+3. CHECK the "Converted_Files" folder
+   - All converted documents will be there
+   - Each PDF will have both a .docx and .xlsx version
+
+What This Will Do:
+-----------------
+
+Convert these PDF files to BOTH formats:
+- ACE Scanner_2025_11_19(1).pdf → ACE Scanner_2025_11_19(1).docx AND ACE Scanner_2025_11_19(1).xlsx
+- ACE Scanner_2025_11_19(2).pdf → ACE Scanner_2025_11_19(2).docx AND ACE Scanner_2025_11_19(2).xlsx
+- ACE Scanner_2025_11_19(4).pdf → ACE Scanner_2025_11_19(4).docx AND ACE Scanner_2025_11_19(4).xlsx
+- ACE Scanner_2025_11_19.pdf → ACE Scanner_2025_11_19.docx AND ACE Scanner_2025_11_19.xlsx
+- PADLI MANOHAR JI.pdf → PADLI MANOHAR JI.docx AND PADLI MANOHAR JI.xlsx
+- RETWALL BILL.pdf → RETWALL BILL.docx AND RETWALL BILL.xlsx
+- SLAB REINFORCEMENT.pdf → SLAB REINFORCEMENT.docx AND SLAB REINFORCEMENT.xlsx
+- bill bridge only.pdf → bill bridge only.docx AND bill bridge only.xlsx
+- r1.pdf → r1.docx AND r1.xlsx
+- r2.pdf → r2.docx AND r2.xlsx
+- r3.pdf → r3.docx AND r3.xlsx
+- r4.pdf → r4.docx AND r4.xlsx
+- slab.pdf → slab.docx AND slab.xlsx
+
+Technical Notes:
+---------------
+
+- The Word documents will preserve paragraph structure
+- The Excel files will try to preserve table-like data
+- For scanned PDFs with images only, text extraction may be limited
+- For best results with scanned documents, use high-resolution scans
+
+Need Help?
+----------
+
+If you encounter any issues:
+1. Make sure Python is installed on your computer
+2. Run "enhanced_installer.bat" first if "convert_all_pdfs.bat" fails
+3. Contact technical support if problems persist
