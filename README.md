@@ -292,6 +292,47 @@ For issues, questions, or feature requests:
 
 ---
 
+## 🖱️ One-Click Usage (Windows)
+
+For easier usage, you can use the one-click solution:
+
+1. Place your PDF files in the `Sample_input_files` folder
+2. Double-click `PDFExcelExtract_OneClick.bat`
+3. Choose your processing option:
+   - **Option 1**: Full processing (OCR + Table Detection) - Best for all PDF types
+   - **Option 2**: Fast processing (Tabula Only) - For PDFs with clear tables
+   - **Option 3**: Web Interface - Interactive processing with real-time feedback
+
+### Processing Options Explained
+
+#### Option 1: Full Processing (Recommended)
+- Uses OCR for scanned documents
+- Detects tables in all PDF types
+- Generates both JSON (for debugging) and Excel files
+- Outputs saved to `outputs/` folder
+
+#### Option 2: Fast Processing
+- Uses Tabula for direct table extraction
+- Much faster but only works on PDFs with clear table structures
+- Outputs saved to `outputs_tabula/` folder
+
+#### Option 3: Web Interface
+- Launches a web browser interface
+- Drag and drop files for processing
+- Real-time progress tracking
+- Download results directly from browser
+
+### Output Locations
+
+- **Full Processing**: `outputs/Sample_input_files/`
+- **Fast Processing**: `outputs_tabula/Sample_input_files/`
+
+Each PDF file generates:
+- `.json` file (debugging information)
+- `.xlsx` file (Excel spreadsheet with extracted tables)
+
+---
+
 **Version**: 2.4.0  
 **Last Updated**: December 2024  
 **Status**: Active Development

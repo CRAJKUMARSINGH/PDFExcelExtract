@@ -21,7 +21,12 @@ async function processPdfFile(filePath: string, outputDir: string) {
   });
 
   logger.info(`Processing job ${job.id} for: ${filename}`);
-  await pdfProcessor.processJob(job.id);
+  // Process with both English and Hindi OCR support for better Unicode text handling
+  await pdfProcessor.processJob(job.id, {
+    ocrLanguage: 'eng+hin', // English + Hindi for better Unicode support
+    confidenceThreshold: 65,
+    tableDetectionSensitivity: 'medium'
+  });
   
   const jobWithTables = await storage.getJobWithTables(job.id);
   

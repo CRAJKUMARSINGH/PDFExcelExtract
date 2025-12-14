@@ -149,9 +149,9 @@ export class PDFProcessor {
       // Try pdf-parse first (more reliable for text-based PDFs)
       try {
         const pdfParseModule = await import('pdf-parse');
-        const pdfParse = pdfParseModule.default || pdfParseModule;
+        const pdfParseFn: any = ('default' in pdfParseModule) ? pdfParseModule.default : pdfParseModule;
         const bufferCopy = Buffer.from(buffer);
-        const data = await pdfParse(bufferCopy);
+        const data = await (pdfParseFn as Function)(bufferCopy);
         if (data.text && data.text.trim().length > 0) {
           console.log(`Extracted ${data.text.length} characters using pdf-parse from ${data.numpages} pages`);
           return data.text;
@@ -173,15 +173,15 @@ export class PDFProcessor {
         // Create a copy of the buffer to avoid detachment issues
         const bufferCopy = Buffer.from(buffer);
         const data = new Uint8Array(bufferCopy.buffer, bufferCopy.byteOffset, bufferCopy.byteLength);
-        const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false, useWorkerFetch: false, useSystemFonts: true, disableFontFace: true });
+        const loadingTask = getDocument({ data });
         const pdf = await loadingTask.promise;
         let fullText = '';
         const numPages = Math.min(pdf.numPages, 50);
         for (let p = 1; p <= numPages; p++) {
           const page = await pdf.getPage(p);
-          const textContent = await page.getTextContent({ disableCombineTextItems: false });
+          const textContent = await page.getTextContent();
           const pageText = (textContent.items as any[]).map((i) => (i.str || '')).join(' ');
-          fullText += `\n\n--- Page ${p} ---\n` + pageText + '\n';
+          fullText += "\n\n--- Page " + p + " ---\n" + pageText + "\n";
         }
         if (fullText.trim().length > 0) {
           console.log(`Extracted ${fullText.length} characters using pdfjs`);
@@ -205,14 +205,14 @@ export class PDFProcessor {
       // Create a copy of the buffer to avoid detachment issues
       const bufferCopy = Buffer.from(buffer);
       const data = new Uint8Array(bufferCopy.buffer, bufferCopy.byteOffset, bufferCopy.byteLength);
-      const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false });
+      const loadingTask = getDocument({ data });
       const pdf = await loadingTask.promise;
       const allTables: TableDetectionResult[] = [];
 
       let tableCounter = 0;
       for (let p = 1; p <= Math.min(pdf.numPages, 10); p++) {
         const page = await pdf.getPage(p);
-        const textContent = await page.getTextContent({ disableCombineTextItems: false });
+        const textContent = await page.getTextContent();
         const items = (textContent.items as any[]).filter(i => i && typeof i.str === 'string' && i.str.trim().length > 0);
         if (items.length === 0) continue;
 
@@ -306,7 +306,9 @@ export class PDFProcessor {
 
   private async performOCR(buffer: Buffer, language: string): Promise<string> {
     let tempDir: string | null = null;
-    const worker = await createWorker(language);
+    // Load multiple languages for better Unicode support, especially Hindi
+    const languages = language.includes('+') ? language : `${language}+hin`;
+    const worker = await createWorker(languages);
     
     try {
       // Create temporary directory for PDF processing
@@ -320,19 +322,21 @@ export class PDFProcessor {
       
       // Convert PDF pages to images
       const convert = fromPath(pdfPath, {
-        density: 200,           // Higher DPI for better OCR
+        density: 300,           // Higher DPI for better OCR of small text
         saveFilename: 'page',
         savePath: tempDir,
         format: 'png',
-        width: 2000,           // Max width for better text recognition
-        height: 2000
+        width: 2400,           // Max width for better text recognition
+        height: 3000
       });
       
-      // Configure OCR for better table detection
+      // Configure OCR for better Unicode text handling
       await worker.setParameters({
         tessedit_pageseg_mode: PSM.AUTO,
         preserve_interword_spaces: '1',
-        tessedit_create_tsv: '1'  // Enable TSV output for coordinates
+        tessedit_create_tsv: '1',  // Enable TSV output for coordinates
+        user_defined_dpi: '300',   // Specify DPI for better accuracy
+        tessedit_char_whitelist: '', // Don't restrict characters for Unicode support
       });
       
       let allOcrText = '';
@@ -340,7 +344,7 @@ export class PDFProcessor {
       // Get number of pages
       const pages = await this.getPdfPageCount(buffer);
       const pagesToProcess = Math.min(pages, 5); // Limit to 5 pages for performance
-      console.log(`Processing ${pagesToProcess} of ${pages} pages for OCR`);
+      console.log(`Processing ${pagesToProcess} of ${pages} pages for OCR with languages: ${languages}`);
       
       // Process each page
       for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
@@ -348,13 +352,14 @@ export class PDFProcessor {
           const pageResult = await convert(pageNum, { responseType: 'image' });
           
           if (pageResult.path) {
-            // Optimize image for OCR
+            // Optimize image for OCR - better preprocessing for Unicode text
             const optimizedImagePath = path.join(tempDir, `optimized-${pageNum}.png`);
             await sharp(pageResult.path)
-              .greyscale()
-              .normalize()
-              .sharpen()
-              .png()
+              .greyscale()      // Convert to grayscale
+              .normalize()      // Normalize brightness
+              .sharpen()        // Sharpen edges for better character recognition
+              .modulate({ brightness: 1.1, saturation: 1.1 }) // Slightly increase contrast
+              .png({ quality: 100, compressionLevel: 0 }) // High quality PNG
               .toFile(optimizedImagePath);
             
             // Perform OCR on the optimized image
@@ -394,9 +399,9 @@ export class PDFProcessor {
     try {
       // Use pdf-parse to get actual page count
       const pdfParseModule = await import('pdf-parse');
-      const pdfParse = pdfParseModule.default || pdfParseModule;
+      const pdfParseFn: any = ('default' in pdfParseModule) ? pdfParseModule.default : pdfParseModule;
       const bufferCopy = Buffer.from(buffer);
-      const data = await pdfParse(bufferCopy);
+      const data = await (pdfParseFn as Function)(bufferCopy);
       return data.numpages || 1;
     } catch (error) {
       console.warn('Could not determine page count, defaulting to 5 pages');
