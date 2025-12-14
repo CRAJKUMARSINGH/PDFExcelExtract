@@ -1,0 +1,56 @@
+{
+  "job": {
+    "filename": "BILL PUNJPUR KANTDI 02-1.pdf",
+    "status": "completed",
+    "options": {
+      "ocr": true,
+      "extractTables": true
+    },
+    "id": "c8a7327f-94c1-487f-8931-fd32572800b7",
+    "uploadedAt": "2025-12-14T08:32:31.828Z",
+    "completedAt": "2025-12-14T08:32:32.239Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "c8a7327f-94c1-487f-8931-fd32572800b7",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "--- Page 3 ---"
+        ],
+        [
+          "--- Page 4 ---"
+        ],
+        [
+          "--- Page 5 ---"
+        ],
+        [
+          "--- Page 6 ---"
+        ],
+        [
+          "--- Page 7 ---"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 60,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 140
+      },
+      "id": "a9de6e2a-17e6-4592-8aee-4d77ec5171af",
+      "extractedAt": "2025-12-14T08:32:32.239Z"
+    }
+  ]
+}

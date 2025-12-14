@@ -1,0 +1,86 @@
+{
+  "job": {
+    "filename": "New Doc 10-30-2025 13.39.pdf",
+    "status": "completed",
+    "options": {
+      "ocr": true,
+      "extractTables": true
+    },
+    "id": "c744cefb-fdc0-4121-afb6-82524e915a84",
+    "uploadedAt": "2025-12-14T08:36:27.867Z",
+    "completedAt": "2025-12-14T08:36:28.371Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "c744cefb-fdc0-4121-afb6-82524e915a84",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "--- Page 3 ---"
+        ],
+        [
+          "--- Page 4 ---"
+        ],
+        [
+          "--- Page 5 ---"
+        ],
+        [
+          "--- Page 6 ---"
+        ],
+        [
+          "--- Page 7 ---"
+        ],
+        [
+          "--- Page 8 ---"
+        ],
+        [
+          "--- Page 9 ---"
+        ],
+        [
+          "--- Page 10 ---"
+        ],
+        [
+          "--- Page 11 ---"
+        ],
+        [
+          "--- Page 12 ---"
+        ],
+        [
+          "--- Page 13 ---"
+        ],
+        [
+          "--- Page 14 ---"
+        ],
+        [
+          "--- Page 15 ---"
+        ],
+        [
+          "--- Page 16 ---"
+        ],
+        [
+          "--- Page 17 ---"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 60,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 340
+      },
+      "id": "aae854c8-cd48-4fda-a882-85ea7f3d9bff",
+      "extractedAt": "2025-12-14T08:36:28.371Z"
+    }
+  ]
+}

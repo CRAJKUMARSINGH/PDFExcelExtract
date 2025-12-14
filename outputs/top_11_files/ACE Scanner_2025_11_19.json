@@ -1,0 +1,59 @@
+{
+  "job": {
+    "filename": "ACE Scanner_2025_11_19.pdf",
+    "status": "completed",
+    "options": {
+      "ocr": true,
+      "extractTables": true
+    },
+    "id": "01496d40-7ee7-4f2f-ac33-b256dba283e8",
+    "uploadedAt": "2025-12-14T08:36:29.827Z",
+    "completedAt": "2025-12-14T08:36:30.279Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": [
+    {
+      "jobId": "01496d40-7ee7-4f2f-ac33-b256dba283e8",
+      "tableIndex": 0,
+      "data": [
+        [
+          "--- Page 1 ---"
+        ],
+        [
+          "--- Page 2 ---"
+        ],
+        [
+          "--- Page 3 ---"
+        ],
+        [
+          "--- Page 4 ---"
+        ],
+        [
+          "--- Page 5 ---"
+        ],
+        [
+          "--- Page 6 ---"
+        ],
+        [
+          "--- Page 7 ---"
+        ],
+        [
+          "--- Page 8 ---"
+        ]
+      ],
+      "headers": [
+        "Text"
+      ],
+      "confidence": 60,
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 160
+      },
+      "id": "9cedf485-77e8-4f1c-bbe9-8d2fb88d0d7a",
+      "extractedAt": "2025-12-14T08:36:30.279Z"
+    }
+  ]
+}

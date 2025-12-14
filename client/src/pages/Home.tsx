@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { FileUploadZone } from '@/components/FileUploadZone'
+import { Shell } from '@/components/layout/Shell'
+import { FileUploader } from '@/components/dashboard/FileUploader'
+import { LogTerminal } from '@/components/dashboard/LogTerminal'
 import { ProcessingPipeline } from '@/components/ProcessingPipeline'
 import { ResultsDashboard } from '@/components/ResultsDashboard'
 import { Card } from '@/components/ui/card'
@@ -8,9 +10,15 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, Zap, Download, ArrowRight } from 'lucide-react'
 import { useProcessingJobs } from '@/hooks/useProcessingJobs'
+import { useToast } from '@/hooks/use-toast'
+import { format } from 'date-fns'
+import { nanoid } from 'nanoid'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('upload')
+  const [logs, setLogs] = useState<any[]>([])
+  const { toast } = useToast()
+  
   const {
     jobs,
     currentJob,
@@ -26,63 +34,70 @@ export default function Home() {
     isProcessing
   } = useProcessingJobs()
 
+  const addLog = (message: string, level: "info" | "success" | "warning" | "error" = "info") => {
+    setLogs((prev) => [
+      ...prev,
+      {
+        id: nanoid(),
+        timestamp: format(new Date(), "HH:mm:ss.SS"),
+        level,
+        message,
+      },
+    ]);
+  };
+
   // Handle file upload with real API
   const onFilesUploaded = async (files: File[]) => {
+    addLog(`System initialized. Ready to process ${files.length} files.`, "info");
+    toast({
+      title: "Files uploaded",
+      description: `${files.length} PDF files ready for conversion.`,
+    });
+    
     await handleFilesUploaded(files)
     setActiveTab('processing')
+    addLog("Processing started...", "info");
   }
-
 
   const handleDownloadAll = (jobId: string) => {
     const job = jobs.find(j => j.id === jobId)
     if (job) {
       downloadAllTablesExcel(jobId, job.filename)
+      addLog(`Downloading all tables for ${job.filename}`, "success");
     }
   }
 
   const handleDownloadTable = (tableId: string, format: 'xlsx' | 'csv') => {
     if (format === 'xlsx' && currentJob) {
       downloadTableExcel(currentJob.id, tableId, currentJob.filename)
+      addLog(`Downloading table ${tableId}`, "success");
     }
-    // CSV format not implemented yet
   }
 
   const handleReprocess = (jobId: string) => {
     retryJob(jobId)
     setCurrentJobId(jobId)
     setActiveTab('processing')
+    addLog(`Reprocessing job ${jobId}`, "info");
   }
 
   const handleDelete = (jobId: string) => {
     deleteJob(jobId)
+    addLog(`Deleted job ${jobId}`, "info");
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight">PDF to Excel Extractor</h1>
-              <p className="text-muted-foreground">
-                Extract structured data from scanned PDF documents with intelligent table detection
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-xs">
-                OCR Powered
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                Table Detection
-              </Badge>
-            </div>
-          </div>
+    <Shell>
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
+            PDF to Excel Extractor
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Extract structured data from scanned PDF documents with intelligent table detection and OCR support.
+          </p>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="upload" className="flex items-center space-x-2" data-testid="tab-upload">
@@ -135,7 +150,10 @@ export default function Home() {
                 </div>
               </Card>
 
-              <FileUploadZone onFilesUploaded={onFilesUploaded} />
+              <FileUploader 
+                onFilesSelected={onFilesUploaded} 
+                disabled={isUploading || isProcessing}
+              />
             </div>
           </TabsContent>
 
@@ -172,7 +190,9 @@ export default function Home() {
             />
           </TabsContent>
         </Tabs>
+
+        <LogTerminal logs={logs} isOpen={logs.length > 0} />
       </div>
-    </div>
+    </Shell>
   )
 }

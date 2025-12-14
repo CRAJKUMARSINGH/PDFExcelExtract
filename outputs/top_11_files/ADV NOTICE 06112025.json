@@ -1,0 +1,16 @@
+{
+  "job": {
+    "filename": "ADV NOTICE 06112025.pdf",
+    "status": "completed",
+    "options": {
+      "ocr": true,
+      "extractTables": true
+    },
+    "id": "c9ad4b58-bc30-497a-842a-b3bf32296efe",
+    "uploadedAt": "2025-12-14T08:36:31.219Z",
+    "completedAt": "2025-12-14T08:36:31.705Z",
+    "errorMessage": null,
+    "progress": 100
+  },
+  "tables": []
+}

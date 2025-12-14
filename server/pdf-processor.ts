@@ -1,7 +1,7 @@
 import { createWorker, PSM } from 'tesseract.js';
 import { fromPath } from 'pdf2pic';
 import sharp from 'sharp';
-import pdfParse from 'pdf-parse';
+// pdf-parse will be imported dynamically to avoid test file issues
 import { storage } from './storage';
 import type { OriginalFile } from './storage';
 import fs from 'fs/promises';
@@ -58,13 +58,17 @@ export class PDFProcessor {
 
       // Step 1: Extract embedded text from PDF (text-based PDFs)
       await this.updateProgress(jobId, 10, 'Extracting text from PDF...');
-      const pdfText = await this.extractTextFromPDF(originalFile.buffer);
+      // Create a copy of the buffer to avoid detachment issues
+      const bufferCopy = Buffer.allocUnsafe(originalFile.buffer.length);
+      originalFile.buffer.copy(bufferCopy);
+      const pdfText = await this.extractTextFromPDF(bufferCopy);
 
       // Step 2: Optionally perform OCR (disabled by default in batch-run environment)
       let ocrText = '';
       if (options.ocrLanguage) {
         await this.updateProgress(jobId, 40, 'Performing OCR on scanned pages...');
-        ocrText = await this.performOCR(originalFile.buffer, options.ocrLanguage || 'eng');
+        // Use the same buffer copy for OCR
+        ocrText = await this.performOCR(bufferCopy, options.ocrLanguage || 'eng');
       }
 
       // Step 3: Analyze text content
@@ -74,7 +78,7 @@ export class PDFProcessor {
       // Step 4: Detect tables (80% progress)
       await this.updateProgress(jobId, 80, 'Detecting and extracting tables...');
       // Try layout-based extraction first
-      let tables = await this.detectTablesByLayout(originalFile.buffer);
+      let tables = await this.detectTablesByLayout(bufferCopy);
       // Fallback to regex-based detection on text
       if (tables.length === 0) {
         tables = await this.detectTables(
@@ -83,16 +87,23 @@ export class PDFProcessor {
           options.tableDetectionSensitivity || 'medium'
         );
       }
-      // Final fallback: single-column of all lines
-      if (tables.length === 0) {
+      // Final fallback: single-column of all lines (only if we have real text)
+      if (tables.length === 0 && combinedText.trim().length > 50) {
         const lines = combinedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        tables = [{
-          tableIndex: 0,
-          headers: ['Text'],
-          data: lines.map(line => [line]),
-          confidence: 80,
-          boundingBox: { x: 0, y: 0, width: 100, height: Math.max(20, lines.length * 20) }
-        }];
+        if (lines.length > 0) {
+          tables = [{
+            tableIndex: 0,
+            headers: ['Text'],
+            data: lines.map(line => [line]),
+            confidence: 60, // Lower confidence for unstructured text
+            boundingBox: { x: 0, y: 0, width: 100, height: Math.max(20, lines.length * 20) }
+          }];
+        }
+      }
+      
+      // If still no tables and no meaningful text, log warning
+      if (tables.length === 0) {
+        console.warn(`No tables detected and insufficient text extracted (${combinedText.length} chars)`);
       }
 
       // Step 5: Save extracted tables (95% progress)
@@ -135,35 +146,65 @@ export class PDFProcessor {
 
   private async extractTextFromPDF(buffer: Buffer): Promise<string> {
     try {
-      // Configure pdfjs worker for Node
+      // Try pdf-parse first (more reliable for text-based PDFs)
       try {
-        const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
-        const fileUrl = 'file:///' + workerPath.replace(/\\/g, '/');
-        GlobalWorkerOptions.workerSrc = fileUrl as any;
-      } catch {}
-
-      // Use pdfjs-dist legacy build to extract text content in Node
-      const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-      const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false, useWorkerFetch: false, useSystemFonts: true, disableFontFace: true });
-      const pdf = await loadingTask.promise;
-      let fullText = '';
-      const numPages = Math.min(pdf.numPages, 50);
-      for (let p = 1; p <= numPages; p++) {
-        const page = await pdf.getPage(p);
-        const textContent = await page.getTextContent({ disableCombineTextItems: false });
-        const pageText = (textContent.items as any[]).map((i) => (i.str || '')).join(' ');
-        fullText += `\n\n--- Page ${p} ---\n` + pageText + '\n';
+        const pdfParseModule = await import('pdf-parse');
+        const pdfParse = pdfParseModule.default || pdfParseModule;
+        const bufferCopy = Buffer.from(buffer);
+        const data = await pdfParse(bufferCopy);
+        if (data.text && data.text.trim().length > 0) {
+          console.log(`Extracted ${data.text.length} characters using pdf-parse from ${data.numpages} pages`);
+          return data.text;
+        }
+      } catch (pdfParseError) {
+        console.log('pdf-parse failed, trying pdfjs:', pdfParseError);
       }
-      return fullText;
+
+      // Fallback to pdfjs-dist for layout-based PDFs
+      try {
+        // Configure pdfjs worker for Node
+        try {
+          const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+          const fileUrl = 'file:///' + workerPath.replace(/\\/g, '/');
+          GlobalWorkerOptions.workerSrc = fileUrl as any;
+        } catch {}
+
+        // Use pdfjs-dist legacy build to extract text content in Node
+        // Create a copy of the buffer to avoid detachment issues
+        const bufferCopy = Buffer.from(buffer);
+        const data = new Uint8Array(bufferCopy.buffer, bufferCopy.byteOffset, bufferCopy.byteLength);
+        const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false, useWorkerFetch: false, useSystemFonts: true, disableFontFace: true });
+        const pdf = await loadingTask.promise;
+        let fullText = '';
+        const numPages = Math.min(pdf.numPages, 50);
+        for (let p = 1; p <= numPages; p++) {
+          const page = await pdf.getPage(p);
+          const textContent = await page.getTextContent({ disableCombineTextItems: false });
+          const pageText = (textContent.items as any[]).map((i) => (i.str || '')).join(' ');
+          fullText += `\n\n--- Page ${p} ---\n` + pageText + '\n';
+        }
+        if (fullText.trim().length > 0) {
+          console.log(`Extracted ${fullText.length} characters using pdfjs`);
+          return fullText;
+        }
+      } catch (pdfjsError) {
+        console.error('PDF text extraction (pdfjs) failed:', pdfjsError);
+      }
+
+      // If both methods fail, return empty string (don't use simulated data)
+      console.warn('No text could be extracted from PDF - may be image-only');
+      return '';
     } catch (error) {
-      console.error('PDF text extraction (pdfjs) failed:', error);
+      console.error('PDF text extraction failed:', error);
       return '';
     }
   }
 
   private async detectTablesByLayout(buffer: Buffer): Promise<TableDetectionResult[]> {
     try {
-      const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+      // Create a copy of the buffer to avoid detachment issues
+      const bufferCopy = Buffer.from(buffer);
+      const data = new Uint8Array(bufferCopy.buffer, bufferCopy.byteOffset, bufferCopy.byteLength);
       const loadingTask = getDocument({ data, disableWorker: true, isEvalSupported: false });
       const pdf = await loadingTask.promise;
       const allTables: TableDetectionResult[] = [];
@@ -272,8 +313,10 @@ export class PDFProcessor {
       tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-ocr-'));
       const pdfPath = path.join(tempDir, 'input.pdf');
       
-      // Write PDF buffer to temporary file
-      await fs.writeFile(pdfPath, buffer);
+      // Write PDF buffer to temporary file - create a deep copy to avoid buffer detachment
+      const bufferCopy = Buffer.allocUnsafe(buffer.length);
+      buffer.copy(bufferCopy);
+      await fs.writeFile(pdfPath, bufferCopy);
       
       // Convert PDF pages to images
       const convert = fromPath(pdfPath, {
@@ -296,10 +339,11 @@ export class PDFProcessor {
       
       // Get number of pages
       const pages = await this.getPdfPageCount(buffer);
-      console.log(`Processing ${pages} pages for OCR`);
+      const pagesToProcess = Math.min(pages, 5); // Limit to 5 pages for performance
+      console.log(`Processing ${pagesToProcess} of ${pages} pages for OCR`);
       
       // Process each page
-      for (let pageNum = 1; pageNum <= Math.min(pages, 10); pageNum++) { // Limit to 10 pages
+      for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
         try {
           const pageResult = await convert(pageNum, { responseType: 'image' });
           
@@ -325,12 +369,13 @@ export class PDFProcessor {
         }
       }
       
-      return allOcrText || this.generateSimulatedOCRText();
+      // Return actual OCR text, or empty string if nothing extracted
+      return allOcrText || '';
       
     } catch (error) {
       console.error('OCR processing failed:', error);
-      // Fallback to simulated data if OCR fails
-      return this.generateSimulatedOCRText();
+      // Return empty string instead of simulated data - let text extraction handle it
+      return '';
     } finally {
       await worker.terminate();
       
@@ -346,9 +391,17 @@ export class PDFProcessor {
   }
 
   private async getPdfPageCount(buffer: Buffer): Promise<number> {
-    // For now, assume single page or use pdf2pic to determine page count
-    // This is a simplification to avoid pdf-parse dependency issues
-    return 3; // Default to processing 3 pages for demonstration
+    try {
+      // Use pdf-parse to get actual page count
+      const pdfParseModule = await import('pdf-parse');
+      const pdfParse = pdfParseModule.default || pdfParseModule;
+      const bufferCopy = Buffer.from(buffer);
+      const data = await pdfParse(bufferCopy);
+      return data.numpages || 1;
+    } catch (error) {
+      console.warn('Could not determine page count, defaulting to 5 pages');
+      return 5; // Default to 5 pages if we can't determine
+    }
   }
 
   private generateSimulatedOCRText(): string {
