@@ -30,7 +30,9 @@ export function useProcessingJobs() {
         formData.append('pdf', file);
         
         const response = await apiRequest('POST', '/api/jobs/upload', formData);
-        return response.json() as Promise<{ id: string; message: string }>;
+        const json = await response.json() as { success: boolean; data?: { jobId: string } };
+        if (!json.success || !json.data?.jobId) throw new Error('Upload failed');
+        return { jobId: json.data.jobId };
       });
       
       return Promise.all(uploadPromises);
@@ -38,7 +40,7 @@ export function useProcessingJobs() {
     onSuccess: (results) => {
       // Set the first uploaded job as current
       if (results.length > 0) {
-        setCurrentJobId(results[0].id);
+        setCurrentJobId(results[0].jobId);
       }
       
       // Refetch jobs list

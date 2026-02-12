@@ -9,6 +9,7 @@
     "serve": "tsx server/web-server.ts",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.js",
+    "vercel-build": "vite build",
     "check": "tsc",
     "test": "vitest",
     "test:run": "vitest run",
