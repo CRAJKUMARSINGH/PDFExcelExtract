@@ -1,352 +1,280 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { z } from "zod";
 import { storage } from "./storage";
-import { insertProcessingJobSchema } from "@shared/schema";
 import { pdfProcessor } from "./pdf-processor";
-import { excelGenerator } from "./excel-generator";
-import { 
-  validate, 
-  validateFile, 
-  validateSchema, 
-  validateRequestId,
-  sanitizeInput,
-  fileUploadSchema
-} from "./lib/validation";
-import { query } from "./lib/validation";
+import { excelGeneratorEnhanced as excelGenerator } from "./excel-generator-enhanced";
 import { logger } from "./lib/logger";
+import { excelToPdfGenerator } from "./excel-to-pdf";
 
-// Configure multer for PDF uploads
+// ─── Multer ───────────────────────────────────────────────────────────────────
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel'
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
     ];
-    
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF and Excel files are allowed.'));
+      cb(new Error("Only PDF and Excel files are accepted."));
     }
   },
 });
 
-// Status enum for validation
-const JobStatus = z.enum(['pending', 'processing', 'completed', 'failed']);
+// ─── Zod schemas ──────────────────────────────────────────────────────────────
 
-// Request schemas
-const createJobSchema = z.object({
-  filename: z.string().min(1, 'Filename is required'),
-  options: z.object({
-    ocr: z.boolean().optional().default(false),
-    extractTables: z.boolean().optional().default(true),
-  }).optional()
-});
+const JobStatus = z.enum(["pending", "processing", "completed", "failed"]);
 
 const updateJobStatusSchema = z.object({
   status: JobStatus,
   error: z.string().optional(),
 });
 
+// ─── Route registration ───────────────────────────────────────────────────────
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+
+  // ── Health ──────────────────────────────────────────────────────────────────
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Simple convert endpoint for Python GUI
-  app.post('/api/convert', upload.single('file'), async (req, res, next) => {
+  // ── Upload PDF → start processing job ──────────────────────────────────────
+  // This is the primary endpoint used by the PDF→Excel UI panel.
+  app.post("/api/jobs/upload", upload.single("file"), async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.file) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'No file uploaded' 
-        });
+        return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Get conversion options
-      const convertToExcel = req.body.excel !== 'false';
-      const convertToWord = req.body.word !== 'false';
-      
-      // In a real implementation, this would process the file
-      // For now, we'll return mock data
-      const result: any = {
-        success: true,
+      if (req.file.mimetype !== "application/pdf") {
+        return res.status(400).json({ error: "Only PDF files are accepted for conversion to Excel." });
+      }
+
+      // Determine processing mode from form field
+      const mode = (req.body.mode as string) || "advanced";
+      const useOcr = mode === "ocr";
+
+      // Create job record
+      const job = await storage.createProcessingJob({
         filename: req.file.originalname,
-        processedAt: new Date().toISOString(),
-      };
-      
-      // Add mock data based on conversion options
-      if (convertToExcel) {
-        result.excel_data = `Mock Excel data for ${req.file.originalname}`;
-      }
-      
-      if (convertToWord) {
-        result.word_data = `Mock Word data for ${req.file.originalname}`;
-      }
-      
-      res.json(result);
-    } catch (error) {
-      logger.error('Error converting file', { error });
-      next(error);
+        status: "pending",
+      });
+
+      // Persist the original file so the processor can read it
+      await storage.saveOriginalFile(job.id, {
+        buffer: req.file.buffer,
+        filename: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+      });
+
+      // Kick off processing asynchronously
+      pdfProcessor
+        .processJob(job.id, {
+          ocrLanguage: useOcr ? "eng" : undefined,
+          confidenceThreshold: 60,
+          tableDetectionSensitivity: mode === "basic" ? "low" : "medium",
+        })
+        .catch((err) => {
+          logger.error(`Background processing failed for job ${job.id}`, { error: err });
+        });
+
+      res.status(201).json({ jobId: job.id, status: job.status });
+    } catch (err) {
+      logger.error("Error in /api/jobs/upload", { error: err });
+      next(err);
     }
   });
 
-  // Upload PDF/Excel files for processing
-  app.post(
-    '/api/jobs',
-    upload.single('file'),
-    validateFile(),
-    validateSchema(createJobSchema),
-    sanitizeInput,
-    async (req, res, next) => {
-      try {
-        if (!req.file) {
-          return res.status(400).json({ 
-            success: false, 
-            message: 'No file uploaded' 
-          });
-        }
-
-        // Create processing job
-        const job = await storage.createProcessingJob({
-          filename: req.file.originalname,
-          status: 'pending',
-          options: req.body.options || {}
-        });
-
-        // Save original file
-        await storage.saveOriginalFile(job.id, {
-          buffer: req.file.buffer,
-          filename: req.file.originalname,
-          mimeType: req.file.mimetype,
-          size: req.file.size
-        });
-
-        res.status(201).json({ 
-          success: true, 
-          data: { 
-            jobId: job.id, 
-            filename: job.filename,
-            status: job.status,
-            createdAt: job.createdAt
-          } 
-        });
-      } catch (error) {
-        logger.error('Error creating job', { error });
-        next(error);
-      }
+  // ── Get job status ──────────────────────────────────────────────────────────
+  app.get("/api/jobs/:id", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const job = await storage.getProcessingJob(req.params.id);
+      if (!job) return res.status(404).json({ error: "Job not found" });
+      res.json(job);
+    } catch (err) {
+      next(err);
     }
-  );
+  });
 
-  // Start processing a job (OCR + table detection)
-  app.post(
-    '/api/jobs/:id/process',
-    validate(validateRequestId),
-    async (req, res, next) => {
-      try {
-        const job = await storage.getProcessingJob(req.params.id);
-        if (!job) {
-          return res.status(404).json({ success: false, message: 'Job not found' });
-        }
-
-        const original = await storage.getOriginalFile(req.params.id);
-        if (!original) {
-          return res.status(409).json({ success: false, message: 'Original file missing' });
-        }
-
-        // Kick off processing in background
-        pdfProcessor.processJob(req.params.id).catch(err => {
-          logger.error('Background processing failed', { error: err });
-        });
-
-        res.json({ success: true, message: 'Processing started' });
-      } catch (error) {
-        logger.error('Error starting processing', { error });
-        next(error);
-      }
+  // ── Get extracted tables for a job ─────────────────────────────────────────
+  app.get("/api/jobs/:id/tables", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const jobWithTables = await storage.getJobWithTables(req.params.id);
+      if (!jobWithTables) return res.status(404).json({ error: "Job not found" });
+      res.json({ success: true, data: jobWithTables.tables });
+    } catch (err) {
+      next(err);
     }
-  );
+  });
 
-  // Get job status
-  app.get(
-    '/api/jobs/:id',
-    validate(validateRequestId),
-    async (req, res, next) => {
-      try {
-        const job = await storage.getProcessingJob(req.params.id);
-        if (!job) {
-          return res.status(404).json({
-            success: false,
-            message: 'Job not found',
-          });
-        }
-        
-        res.json({ 
-          success: true, 
-          data: job 
-        });
-      } catch (error) {
-        logger.error('Error fetching job', { error });
-        next(error);
+  // ── Download Excel for a completed job ─────────────────────────────────────
+  app.get("/api/jobs/:id/download", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const job = await storage.getProcessingJob(req.params.id);
+      if (!job) return res.status(404).json({ error: "Job not found" });
+      if (job.status !== "completed") {
+        return res.status(409).json({ error: `Job is not completed (status: ${job.status})` });
       }
-    }
-  );
 
-  // Get extracted tables for a job
-  app.get(
-    '/api/jobs/:id/tables',
-    validate(validateRequestId),
-    async (req, res, next) => {
-      try {
-        const jobWithTables = await storage.getJobWithTables(req.params.id);
-        if (!jobWithTables) {
-          return res.status(404).json({ success: false, message: 'Job not found' });
+      // Try cached Excel first
+      let excelBuffer = await storage.getExcelFile(req.params.id);
+
+      // Generate on-demand if not cached
+      if (!excelBuffer) {
+        try {
+          excelBuffer = await excelGenerator.generateJobExcel(req.params.id);
+        } catch (genErr: any) {
+          // If no tables were found, generate a placeholder Excel
+          if (genErr?.message?.includes('No tables found')) {
+            const XLSX = await import('xlsx');
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([
+              ['No tables were detected in this PDF.'],
+              ['Try re-uploading with OCR mode enabled for scanned documents.'],
+            ]);
+            XLSX.utils.book_append_sheet(wb, ws, 'Info');
+            excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+          } else {
+            logger.error("Excel generation failed", { error: genErr });
+            return res.status(500).json({ error: "Failed to generate Excel file" });
+          }
         }
-        res.json({ success: true, data: jobWithTables.tables });
-      } catch (error) {
-        logger.error('Error fetching tables', { error });
-        next(error);
       }
-    }
-  );
 
-  // Update job status
-  app.patch(
-    '/api/jobs/:id/status',
-    validate(validateRequestId),
-    validateSchema(updateJobStatusSchema),
-    sanitizeInput,
-    async (req, res, next) => {
-      try {
-        const job = await storage.updateProcessingJobStatus(
-          req.params.id, 
-          req.body.status,
-          req.body.error
-        );
-        
-        if (!job) {
-          return res.status(404).json({
-            success: false,
-            message: 'Job not found',
-          });
-        }
-        
-        res.json({ 
-          success: true, 
-          data: job 
-        });
-      } catch (error) {
-        logger.error('Error updating job status', { error });
-        next(error);
+      const filename = job.filename.replace(/\.pdf$/i, ".xlsx");
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Length", excelBuffer.length);
+      res.send(excelBuffer);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ── Download individual table Excel ────────────────────────────────────────
+  app.get("/api/jobs/:id/tables/:tableId/download", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const table = await storage.getExtractedTable(req.params.tableId);
+      if (!table || table.jobId !== req.params.id) {
+        return res.status(404).json({ error: "Table not found" });
       }
-    }
-  );
 
-  // Download processed file
-  app.get(
-    '/api/jobs/:id/download',
-    validate(validateRequestId),
-    async (req, res, next) => {
-      try {
-        const job = await storage.getProcessingJob(req.params.id);
-        if (!job || job.status !== 'completed') {
-          return res.status(404).json({
-            success: false,
-            message: 'Processed file not found or job not completed',
-          });
-        }
-        
-        const file = await storage.getProcessedFile(job.id);
-        if (!file) {
-          return res.status(404).json({
-            success: false,
-            message: 'Processed file not found',
-          });
-        }
-        
-        res.setHeader('Content-Type', file.mimeType);
-        res.setHeader('Content-Length', file.size);
-        res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
-        
-        res.send(file.buffer);
-      } catch (error) {
-        logger.error('Error downloading file', { error });
-        next(error);
+      let excelBuffer = await storage.getExcelFile(req.params.id, req.params.tableId);
+      if (!excelBuffer) {
+        excelBuffer = await excelGenerator.generateTableExcel(req.params.tableId);
       }
-    }
-  );
 
-  // List all jobs with pagination
-  app.get(
-    '/api/jobs',
-    validate([
-      query('page').optional().isInt({ min: 1 }).toInt(10).default(1),
-      query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(10).default(10),
-      query('status').optional().isIn(['pending', 'processing', 'completed', 'failed']),
-    ]),
-    async (req, res, next) => {
-      try {
-        const { page, pageSize, status } = req.query as {
-          page: number;
-          pageSize: number;
-          status?: 'pending' | 'processing' | 'completed' | 'failed';
-        };
-        
-        const { jobs, total } = await storage.listProcessingJobs({
-          page,
-          pageSize,
-          status,
-        });
-        
-        res.json({
-          success: true,
-          data: jobs,
-          pagination: {
-            page,
-            pageSize,
-            total,
-            totalPages: Math.ceil(total / pageSize),
-          },
-        });
-      } catch (error) {
-        logger.error('Error listing jobs', { error });
-        next(error);
+      const job = await storage.getProcessingJob(req.params.id);
+      const baseName = (job?.filename || "table").replace(/\.pdf$/i, "");
+      const filename = `${baseName}_table_${table.tableIndex + 1}.xlsx`;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Length", excelBuffer.length);
+      res.send(excelBuffer);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ── List jobs ───────────────────────────────────────────────────────────────
+  app.get("/api/jobs", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = parseInt(String(req.query.page || "1"), 10);
+      const pageSize = Math.min(parseInt(String(req.query.pageSize || "20"), 10), 100);
+      const status = req.query.status as string | undefined;
+
+      const { jobs, total } = await storage.listProcessingJobs({ page, pageSize, status });
+      res.json({
+        success: true,
+        data: jobs,
+        pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ── Delete a job ────────────────────────────────────────────────────────────
+  app.delete("/api/jobs/:id", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const deleted = await storage.deleteProcessingJob(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Job not found" });
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ── Excel → PDF conversion (server-side) ───────────────────────────────────
+  // Accepts an Excel/CSV file and returns a PDF.
+  app.post("/api/excel-to-pdf", upload.single("file"), async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
       }
-    }
-  );
 
-  // Error handling middleware
-  app.use((err: any, req: Request, res: Response, next: any) => {
+      const allowedMimes = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "text/csv",
+      ];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        return res.status(400).json({ error: "Only Excel (.xlsx, .xls) and CSV files are accepted." });
+      }
+
+      const title = (req.body.title as string) || req.file.originalname.replace(/\.[^/.]+$/, "");
+      const pdfBuffer = await excelToPdfGenerator.generatePdf(req.file.buffer, req.file.originalname, title);
+
+      const pdfFilename = req.file.originalname.replace(/\.(xlsx?|csv)$/i, ".pdf");
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${pdfFilename}"`);
+      res.setHeader("Content-Length", pdfBuffer.length);
+      res.send(pdfBuffer);
+    } catch (err) {
+      logger.error("Error in /api/excel-to-pdf", { error: err });
+      next(err);
+    }
+  });
+
+  // ── Update job status (internal / testing) ─────────────────────────────────
+  app.patch("/api/jobs/:id/status", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = updateJobStatusSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid status", details: parsed.error.errors });
+      }
+      const job = await storage.updateProcessingJob(req.params.id, {
+        status: parsed.data.status,
+        errorMessage: parsed.data.error,
+      });
+      if (!job) return res.status(404).json({ error: "Job not found" });
+      res.json({ success: true, data: job });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ── Global error handler ────────────────────────────────────────────────────
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof multer.MulterError) {
-      return res.status(400).json({
-        success: false,
-        message: 'File upload error',
-        error: err.message,
-      });
+      return res.status(400).json({ error: "File upload error", details: err.message });
     }
-    
     if (err instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors: err.errors,
-      });
+      return res.status(400).json({ error: "Validation error", details: err.errors });
     }
-    
-    logger.error('Unhandled error', { error: err });
-    
+    logger.error("Unhandled error", { error: err });
     res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      ...(process.env.NODE_ENV === 'development' && { error: err.message }),
+      error: "Internal server error",
+      ...(process.env.NODE_ENV === "development" && { details: err?.message }),
     });
   });
 

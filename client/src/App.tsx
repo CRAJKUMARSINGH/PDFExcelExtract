@@ -1,12 +1,12 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
+import Home from "@/pages/Home";
+
+const queryClient = new QueryClient();
 
 function Router() {
   return (
@@ -19,19 +19,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ThemeProvider defaultTheme="light" storageKey="pdf-excel-theme">
-          <div className="relative min-h-screen">
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeToggle />
-            </div>
+    <ThemeProvider defaultTheme="system" storageKey="pdf-excel-theme">
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Router />
-          </div>
+          </WouterRouter>
           <Toaster />
-        </ThemeProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

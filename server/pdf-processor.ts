@@ -115,7 +115,8 @@ export class PDFProcessor {
           data: table.data,
           headers: table.headers,
           confidence: table.confidence,
-          boundingBox: table.boundingBox
+          boundingBox: table.boundingBox,
+          pageNumber: 1,
         });
       }
 
@@ -140,7 +141,10 @@ export class PDFProcessor {
   }
 
   private async updateProgress(jobId: string, progress: number, message: string): Promise<void> {
-    await storage.updateProcessingJob(jobId, { progress });
+    await storage.updateProcessingJob(jobId, {
+      progress,
+      metadata: { statusMessage: message } as any,
+    });
     console.log(`Job ${jobId}: ${progress}% - ${message}`);
   }
 
